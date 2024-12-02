@@ -15,14 +15,15 @@ data class Habit(
     val habitType: HabitType = HabitType.DECREASE,
     val startTaperAlarmsPerDay: Int,
     val endTaperAlarmsPerDay: Int = 1,
-    val taperLength: TaperLength,
+    val taperLength: Int,
+    val taperLengthTimeUnit: TaperLengthTimeUnit = TaperLengthTimeUnit.WEEKS,
     val isDone: Boolean = false,
 )
 
-data class TaperLength(
-    val number: Int,
-    val taperLengthTimeScale: TaperLengthTimeScale
-)
+enum class TaperLengthTimeUnit {
+    WEEKS,
+    MONTHS
+}
 
 enum class HabitType {
     INCREASE,

@@ -1,7 +1,5 @@
 package com.harrisonog.taper.data
 
-import java.time.LocalDateTime
-
 class SampleData {
 
     fun getSampleHabitList(): List<Habit> {
@@ -11,14 +9,14 @@ class SampleData {
                 description = "Reduce habit description 1",
                 notificationMessage = "Take 1 gum",
                 startTaperAlarmsPerDay = 5,
-                taperLength = TaperLength(5, TaperLengthTimeScale.WEEKS),
+                taperLength = 5,
             ),
             Habit(
                 name = "Sample Habit 2",
                 description = "Reduce habit description 2",
                 notificationMessage = "Drink 1 soda",
                 startTaperAlarmsPerDay = 3,
-                taperLength = TaperLength(3, TaperLengthTimeScale.WEEKS),
+                taperLength = 3,
             ),
             Habit(
                 name = "Sample Habit 3",
@@ -27,7 +25,7 @@ class SampleData {
                 habitType = HabitType.INCREASE,
                 startTaperAlarmsPerDay = 2,
                 endTaperAlarmsPerDay = 10,
-                taperLength = TaperLength(6, TaperLengthTimeScale.WEEKS),
+                taperLength = 6,
             ),
             Habit(
                 name = "Sample Habit 4",
@@ -36,7 +34,7 @@ class SampleData {
                 habitType = HabitType.INCREASE,
                 startTaperAlarmsPerDay = 5,
                 endTaperAlarmsPerDay = 10,
-                taperLength = TaperLength(5, TaperLengthTimeScale.WEEKS),
+                taperLength = 5,
             )
         )
     }

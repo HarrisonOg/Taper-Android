@@ -54,7 +54,7 @@ fun TaperComposableApp(
         ) {
             composable(route = TaperScreen.Main.name) {
                 val context = LocalContext.current
-                
+
             }
         }
     }
