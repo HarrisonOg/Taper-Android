@@ -21,6 +21,7 @@ data class Habit(
 )
 
 enum class TaperLengthTimeUnit {
+    DAYS,
     WEEKS,
     MONTHS
 }
@@ -28,10 +29,4 @@ enum class TaperLengthTimeUnit {
 enum class HabitType {
     INCREASE,
     DECREASE
-}
-
-enum class TaperLengthTimeScale{
-    DAYS,
-    WEEKS,
-    MONTHS
 }

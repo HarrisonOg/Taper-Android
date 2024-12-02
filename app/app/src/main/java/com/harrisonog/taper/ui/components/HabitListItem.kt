@@ -16,7 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.harrisonog.taper.data.Habit
 import com.harrisonog.taper.data.HabitType
-import com.harrisonog.taper.data.TaperLengthTimeScale
 
 @Composable
 fun HabitListItem(habit: Habit) {
