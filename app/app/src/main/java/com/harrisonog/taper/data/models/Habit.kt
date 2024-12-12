@@ -1,12 +1,13 @@
-package com.harrisonog.taper.data
+package com.harrisonog.taper.data.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.harrisonog.taper.utils.Constants.DATABASE_TABLE
 
 /**
  * Class for storing Habit data.
  */
-@Entity
+@Entity(tableName = DATABASE_TABLE)
 data class Habit(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,

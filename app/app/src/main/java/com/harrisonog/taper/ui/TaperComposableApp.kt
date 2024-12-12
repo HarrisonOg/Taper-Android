@@ -10,14 +10,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.harrisonog.taper.R
-import com.harrisonog.taper.data.MainViewModel
 import com.harrisonog.taper.ui.components.TaperAppBar
+import com.harrisonog.taper.utils.Constants.HABIT_ARGUMENT_KEY
 
 enum class TaperScreen(@StringRes val title: Int) {
     Main(title = R.string.main_screen_id),
@@ -40,7 +43,11 @@ fun TaperComposableApp(
     )
 
     Scaffold(
-        topBar = { TaperAppBar() }
+        topBar = { TaperAppBar(
+            currentScreen = currentScreen,
+            canNavigateBack = navController.previousBackStackEntry != null,
+            navigateUp = { navController.navigateUp() }
+        ) }
     ) { innerPadding ->
 //        val uiState by viewModel
 
@@ -52,8 +59,25 @@ fun TaperComposableApp(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
         ) {
-            composable(route = TaperScreen.Main.name) {
+            //Main Screen
+            composable(
+                route = TaperScreen.Main.name
+            ) {
                 val context = LocalContext.current
+                MainScreen(
+                    viewModel = viewModel,
+                    modifier = Modifier.fillMaxSize().padding(12.dp)
+                )
+            }
+            //Edit Screen
+            composable(
+                route = TaperScreen.Edit.name,
+                arguments = listOf(navArgument(HABIT_ARGUMENT_KEY) {
+                    type = NavType.IntType
+                })
+            ) { navBackStackEntry ->
+                val habitId = navBackStackEntry.arguments!!.getInt(HABIT_ARGUMENT_KEY)
+
 
             }
         }

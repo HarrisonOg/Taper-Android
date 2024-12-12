@@ -1,4 +1,4 @@
-package com.harrisonog.taper.data
+package com.harrisonog.taper.data.models
 
 class SampleData {
 

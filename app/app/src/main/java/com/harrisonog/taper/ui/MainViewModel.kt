@@ -1,7 +1,9 @@
-package com.harrisonog.taper.data
+package com.harrisonog.taper.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.harrisonog.taper.data.HabitRepository
+import com.harrisonog.taper.data.models.Habit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 
