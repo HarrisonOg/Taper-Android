@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">Taper</string>
-
-    <string name="main_screen_id">Main</string>
-    <string name="edit_habit_screen_id">Edit</string>
-    <string name="settings_screen_id">Settings</string>
-
-    <string name="back_button">Back Button</string>
-</resources>
