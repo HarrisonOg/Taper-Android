@@ -1,71 +1,96 @@
 package com.harrisonog.taper.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.harrisonog.taper.data.Habit
 import com.harrisonog.taper.data.HabitType
 import com.harrisonog.taper.data.TaperLength
 import com.harrisonog.taper.data.TaperLengthTimeScale
+import com.harrisonog.taper.ui.theme.TaperTheme
 
 @Composable
-fun HabitListItem(habit: Habit) {
+fun HabitListItem(
+    habit: Habit,
+    modifier: Modifier = Modifier,
+) {
     Card(
-        modifier = Modifier.size(width = 360.dp, height = 100.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Column(
-            modifier = Modifier.padding(all = 8.dp),
+            modifier = Modifier.padding(all = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row {
-                HabitTitleText(habit.name)
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HabitTitleText(
+                    title = habit.name,
+                    modifier = Modifier.weight(1f)
+                )
+                HabitTypeBadge(habit.habitType)
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row{
-                HabitDescriptionText(habit.description)
-            }
+            HabitDescriptionText(habit.description)
+            HabitMetadataRow(habit = habit)
+            HabitNotificationMessage(
+                message = habit.notificationMessage,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
 
 @Composable
-fun HabitDescriptionText(desc: String) {
+fun HabitDescriptionText(
+    desc: String,
+    modifier: Modifier = Modifier,
+) {
     Text(
         text = desc,
-        style = MaterialTheme.typography.bodyMedium
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
     )
 }
 
 @Composable
-fun HabitTitleText(title: String) {
+fun HabitTitleText(
+    title: String,
+    modifier: Modifier = Modifier,
+) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium
+        style = MaterialTheme.typography.titleMedium,
+        modifier = modifier
     )
 }
 
 @Preview
 @Composable
 fun PreviewHabitListItem() {
-    HabitListItem(
-        Habit(
-            name = "Sample Habit 1",
-            description = "Reduce habit description 1",
-            notificationMessage = "Take 1 gum",
-            habitType = HabitType.INCREASE,
-            startTaperAlarmsPerDay = 5,
-            taperLength = TaperLength(5, TaperLengthTimeScale.WEEKS),
+    TaperTheme {
+        HabitListItem(
+            Habit(
+                name = "Sample Habit 1",
+                description = "Reduce habit description 1",
+                notificationMessage = "Take 1 gum",
+                habitType = HabitType.INCREASE,
+                startTaperAlarmsPerDay = 5,
+                endTaperAlarmsPerDay = 10,
+                taperLength = TaperLength(5, TaperLengthTimeScale.WEEKS),
             )
-    )
+        )
+    }
 }
