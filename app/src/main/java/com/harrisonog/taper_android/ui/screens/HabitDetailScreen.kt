@@ -1,7 +1,5 @@
 package com.harrisonog.taper_android.ui.screens
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,7 +14,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HabitDetailScreen(
     state: HabitDetailState,
@@ -61,7 +58,6 @@ fun HabitDetailScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun EventRow(event: HabitEvent) {
     val fmt = DateTimeFormatter.ofPattern("EEE, MMM d • h:mm a")

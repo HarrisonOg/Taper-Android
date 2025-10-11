@@ -1,7 +1,5 @@
 package com.harrisonog.taper_android.ui
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.harrisonog.taper_android.data.TaperRepository
 import com.harrisonog.taper_android.data.db.Habit
@@ -14,7 +12,6 @@ data class HabitDetailState(
     val events: List<HabitEvent> = emptyList()
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 class HabitDetailViewModel(private val repo: TaperRepository, habitId: Long): ViewModel() {
     val ui = combine(
         repo.observeHabit(habitId),

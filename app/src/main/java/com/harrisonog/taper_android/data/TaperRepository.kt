@@ -1,8 +1,6 @@
 package com.harrisonog.taper_android.data
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.harrisonog.taper_android.data.db.Habit
 import com.harrisonog.taper_android.data.db.HabitDao
 import com.harrisonog.taper_android.data.db.HabitEventDao
@@ -13,7 +11,6 @@ import com.harrisonog.taper_android.logic.ScheduleGenerator
 import kotlinx.coroutines.flow.first
 import java.time.LocalTime
 
-@RequiresApi(Build.VERSION_CODES.O)
 class TaperRepository(
     private val context: Context,
     private val habitDao: HabitDao,

@@ -20,14 +20,12 @@ private val KEY_WAKE_START = stringPreferencesKey("wake_start") // "HH:MM"
 private val KEY_WAKE_END   = stringPreferencesKey("wake_end")
 
 // Typed settings model
-@RequiresApi(Build.VERSION_CODES.O)
 data class AppSettings(
     val wakeStart: LocalTime = LocalTime.of(8, 0),
     val wakeEnd: LocalTime = LocalTime.of(22, 0)
 )
 
 // Map Preferences -> AppSettings
-@RequiresApi(Build.VERSION_CODES.O)
 fun prefsToSettings(p: Preferences): AppSettings {
     val start = p[KEY_WAKE_START]?.let(LocalTime::parse) ?: LocalTime.of(8, 0)
     val end   = p[KEY_WAKE_END]?.let(LocalTime::parse)   ?: LocalTime.of(22, 0)
@@ -35,7 +33,6 @@ fun prefsToSettings(p: Preferences): AppSettings {
 }
 
 // Observe settings as a Flow
-@RequiresApi(Build.VERSION_CODES.O)
 fun Context.observeSettings(): Flow<AppSettings> =
     dataStore.data.map { prefsToSettings(it) }
 

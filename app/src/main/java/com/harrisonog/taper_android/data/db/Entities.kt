@@ -1,12 +1,9 @@
 package com.harrisonog.taper_android.data.db
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.room.*
 import java.time.*
 
 @Entity(tableName = "habits")
-@RequiresApi(Build.VERSION_CODES.O)
 data class Habit(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,

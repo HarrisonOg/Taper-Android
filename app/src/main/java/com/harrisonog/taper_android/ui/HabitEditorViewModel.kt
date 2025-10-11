@@ -1,7 +1,5 @@
 package com.harrisonog.taper_android.ui
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harrisonog.taper_android.data.TaperRepository
@@ -9,7 +7,6 @@ import com.harrisonog.taper_android.data.db.Habit
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-@RequiresApi(Build.VERSION_CODES.O)
 class HabitEditorViewModel(private val repo: TaperRepository): ViewModel() {
     fun create(
         name: String,

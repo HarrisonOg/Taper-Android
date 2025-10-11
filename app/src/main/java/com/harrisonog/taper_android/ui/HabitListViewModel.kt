@@ -1,7 +1,5 @@
 package com.harrisonog.taper_android.ui
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harrisonog.taper_android.data.TaperRepository
@@ -10,7 +8,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-@RequiresApi(Build.VERSION_CODES.O)
 class HabitListViewModel(private val repo: TaperRepository): ViewModel() {
     val uiState = repo.observeHabits()
         .map { HabitListState(items = it) }

@@ -1,8 +1,6 @@
 package com.harrisonog.taper_android.logic
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.harrisonog.taper_android.data.db.Habit
 import com.harrisonog.taper_android.data.db.HabitEvent
 import com.harrisonog.taper_android.data.settings.AppSettings
@@ -14,7 +12,6 @@ import kotlinx.coroutines.flow.first
 
 data class WakeWindow(val start: LocalTime, val end: LocalTime)
 
-@RequiresApi(Build.VERSION_CODES.O)
 object ScheduleGenerator {
 
     /**

@@ -1,7 +1,5 @@
 package com.harrisonog.taper_android.ui.screens
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -87,7 +85,6 @@ data class HabitDraft(
 )
 
 // Helper to pass draft back into VM create()
-@RequiresApi(Build.VERSION_CODES.O)
 fun HabitDraft.toEntity() = Habit(
     name = name,
     description = description,
