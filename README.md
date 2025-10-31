@@ -16,4 +16,5 @@ Taper builds reminder plans in two steps:
    receiver to handle the alarm. On Android 12+ the manifest must declare
    `android.permission.SCHEDULE_EXACT_ALARM`, and callers should fall back to
    WorkManager when `AlarmManager.canScheduleExactAlarms()` reports that the
-   user has not granted exact alarm access.
+   user has not granted exact alarm access. The repository tolerates a null
+   scheduler (useful in tests) and simply skips alarm updates in that case.

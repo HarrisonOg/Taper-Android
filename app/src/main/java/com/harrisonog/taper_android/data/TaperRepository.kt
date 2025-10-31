@@ -16,7 +16,7 @@ class TaperRepository(
     private val context: Context,
     private val habitDao: HabitDao,
     private val eventDao: HabitEventDao,
-    private val alarmScheduler: AlarmScheduler,
+    private val alarmScheduler: AlarmScheduler? = null,
 ) {
     // Room-backed domain data
     fun observeHabits() = habitDao.observeAll()
@@ -41,7 +41,7 @@ class TaperRepository(
     }
 
     suspend fun deleteHabit(habit: Habit) {
-        alarmScheduler.cancel(habit.id)
+        alarmScheduler?.cancel(habit.id)
         eventDao.deleteForHabit(habit.id)
         habitDao.delete(habit)
     }
@@ -56,9 +56,9 @@ class TaperRepository(
         )
         if (events.isNotEmpty()) {
             eventDao.insertAll(events)
-            alarmScheduler.reschedule(habit, events)
+            alarmScheduler?.reschedule(habit, events)
         } else {
-            alarmScheduler.cancel(habitId)
+            alarmScheduler?.cancel(habitId)
         }
     }
 }
