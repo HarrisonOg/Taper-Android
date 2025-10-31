@@ -2,6 +2,7 @@ package com.harrisonog.taper_android
 
 import android.app.Application
 import androidx.room.Room
+import com.harrisonog.taper_android.data.DefaultTaperRepository
 import com.harrisonog.taper_android.data.TaperRepository
 import com.harrisonog.taper_android.data.db.AppDatabase
 
@@ -23,7 +24,7 @@ class TaperApp : Application() {
         database = Room.databaseBuilder(this, AppDatabase::class.java, "taper.db")
             .fallbackToDestructiveMigration(false)
             .build()
-        repository = TaperRepository(
+        repository = DefaultTaperRepository(
             context = this,
             habitDao = database.habitDao(),
             eventDao = database.habitEventDao()

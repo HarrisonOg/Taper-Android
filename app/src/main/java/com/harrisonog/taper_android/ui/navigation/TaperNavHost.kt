@@ -42,7 +42,8 @@ fun TaperNavHost(
             HabitListScreen(
                 state = state,
                 onAdd = { navController.navigate(HabitEditorRoute) },
-                onOpen = { habitId -> navController.navigate("$HabitDetailRoute/$habitId") }
+                onOpen = { habitId -> navController.navigate("$HabitDetailRoute/$habitId") },
+                onDelete = { habit -> viewModel.deleteHabit(habit) }
             )
         }
 
@@ -82,7 +83,12 @@ fun TaperNavHost(
 
             HabitDetailScreen(
                 state = state as HabitDetailState,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onDelete = { habit ->
+                    viewModel.deleteHabit(habit).invokeOnCompletion {
+                        navController.popBackStack()
+                    }
+                }
             )
         }
     }
