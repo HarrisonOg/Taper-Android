@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.harrisonog.taper_android.data.TaperRepository
+import com.harrisonog.taper_android.ui.HabitDetailState
 import com.harrisonog.taper_android.ui.HabitDetailViewModel
 import com.harrisonog.taper_android.ui.HabitEditorViewModel
 import com.harrisonog.taper_android.ui.HabitListViewModel
@@ -80,7 +81,7 @@ fun TaperNavHost(
             val state by viewModel.ui.collectAsState()
 
             HabitDetailScreen(
-                state = state,
+                state = state as HabitDetailState,
                 onBack = { navController.popBackStack() }
             )
         }

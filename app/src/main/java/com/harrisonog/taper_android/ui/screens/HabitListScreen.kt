@@ -49,7 +49,7 @@ fun HabitListScreen(
                             .clickable { onOpen(habit.id) }
                             .padding(horizontal = 8.dp)
                     )
-                    Divider()
+                    HorizontalDivider()
                 }
             }
         }
