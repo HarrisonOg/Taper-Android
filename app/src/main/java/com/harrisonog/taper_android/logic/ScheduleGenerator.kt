@@ -15,7 +15,10 @@ data class WakeWindow(val start: LocalTime, val end: LocalTime)
 object ScheduleGenerator {
 
     /**
-     * PURE version — pass settings explicitly (recommended for tests).
+     * Generates HabitEvents for a habit given explicit user [settings]. The
+     * resulting schedule is guaranteed to respect the user's waking window and
+     * to change monotonically (never increasing for taper-down habits and never
+     * decreasing for ramp-up habits) after rounding to whole reminders per day.
      */
     fun generate(
         habitId: Long,
@@ -32,8 +35,34 @@ object ScheduleGenerator {
             else (end - start).toDouble() / (totalDays - 1)
 
         val events = mutableListOf<HabitEvent>()
+        var previousCount: Int? = null
+        val decreasing = end < start
+        val increasing = end > start
+
         for (dayIdx in 0 until totalDays) {
-            val count = (start + deltaPerDay * dayIdx).roundToInt().coerceAtLeast(0)
+            val ideal = start + deltaPerDay * dayIdx
+            var count = ideal.roundToInt()
+            if (decreasing && previousCount != null) {
+                count = minOf(count, previousCount!!)
+            } else if (increasing && previousCount != null) {
+                count = maxOf(count, previousCount!!)
+            }
+
+            if (decreasing) {
+                val floor = end.coerceAtLeast(0)
+                if (count < floor) count = floor
+            }
+            if (increasing) {
+                val ceiling = end
+                if (count > ceiling) count = ceiling
+            }
+
+            if (dayIdx == totalDays - 1) {
+                count = end.coerceAtLeast(0)
+            }
+
+            count = count.coerceAtLeast(0)
+            previousCount = count
             if (count <= 0) continue
 
             val date = habit.startDate.plusDays(dayIdx.toLong())
