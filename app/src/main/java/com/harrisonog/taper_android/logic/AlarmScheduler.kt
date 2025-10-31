@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.AlarmManagerCompat
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
@@ -48,11 +49,13 @@ class AlarmScheduler(
             .groupingBy { it.scheduledAt.atZone(zoneId).toLocalDate() }
             .eachCount()
 
+        val canScheduleExact = exactAlarmGateway.canScheduleExactAlarms()
+
         for (event in upcoming) {
             val delay = Duration.between(now, event.scheduledAt).coerceAtLeast(Duration.ZERO)
             val localDate = event.scheduledAt.atZone(zoneId).toLocalDate()
             val perDay = countsByDate[localDate] ?: 0
-            if (shouldUseExact(habit, perDay)) {
+            if (shouldUseExact(habit, perDay) && canScheduleExact) {
                 exactAlarmGateway.scheduleExact(habit.id, event, zoneId)
             } else {
                 workGateway.enqueue(habit.id, event, delay)
@@ -81,6 +84,8 @@ class AlarmScheduler(
 
     /** Abstraction around exact alarm delivery for Doze-sensitive reminders. */
     interface ExactAlarmGateway {
+        /** Whether the app currently holds permission to post exact alarms. */
+        fun canScheduleExactAlarms(): Boolean
         fun scheduleExact(habitId: Long, event: HabitEvent, zoneId: ZoneId)
         fun cancel(habitId: Long)
     }
@@ -151,6 +156,14 @@ private class AlarmManagerGateway(
     private val alarmManager: AlarmManager,
     private val pendingIntentFactory: PendingIntentFactory
 ) : AlarmScheduler.ExactAlarmGateway {
+
+    override fun canScheduleExactAlarms(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+    }
 
     override fun scheduleExact(habitId: Long, event: HabitEvent, zoneId: ZoneId) {
         val pendingIntent = pendingIntentFactory.create(habitId, event)

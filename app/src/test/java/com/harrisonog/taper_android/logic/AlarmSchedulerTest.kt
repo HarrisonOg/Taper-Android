@@ -27,7 +27,7 @@ class AlarmSchedulerTest {
             eventAt(habit, 1, 10)
         )
         val workGateway = RecordingWorkGateway()
-        val exactGateway = RecordingExactGateway()
+        val exactGateway = RecordingExactGateway(canScheduleExact = true)
         val scheduler = AlarmScheduler(workGateway, exactGateway, fixedClock)
 
         scheduler.reschedule(habit, events, zone)
@@ -46,7 +46,7 @@ class AlarmSchedulerTest {
             eventAt(habit, 2, 11)
         )
         val workGateway = RecordingWorkGateway()
-        val exactGateway = RecordingExactGateway()
+        val exactGateway = RecordingExactGateway(canScheduleExact = true)
         val scheduler = AlarmScheduler(workGateway, exactGateway, fixedClock)
 
         scheduler.reschedule(habit, events, zone)
@@ -93,11 +93,29 @@ class AlarmSchedulerTest {
         }
     }
 
-    private class RecordingExactGateway : AlarmScheduler.ExactAlarmGateway {
+    @Test
+    fun `exact alarm fallback uses workmanager when permission missing`() {
+        val habit = taperHabit(startPerDay = 2)
+        val events = listOf(eventAt(habit, 1, 10))
+        val workGateway = RecordingWorkGateway()
+        val exactGateway = RecordingExactGateway(canScheduleExact = false)
+        val scheduler = AlarmScheduler(workGateway, exactGateway, fixedClock)
+
+        scheduler.reschedule(habit, events, zone)
+
+        assertEquals("WorkManager should receive event when exact alarms disabled", 1, workGateway.enqueued.size)
+        assertTrue("Exact gateway should not schedule when disabled", exactGateway.scheduled.isEmpty())
+    }
+
+    private class RecordingExactGateway(
+        private val canScheduleExact: Boolean
+    ) : AlarmScheduler.ExactAlarmGateway {
         data class Entry(val habitId: Long, val event: HabitEvent)
 
         val scheduled = mutableListOf<Entry>()
         val cancelled = mutableListOf<Long>()
+
+        override fun canScheduleExactAlarms(): Boolean = canScheduleExact
 
         override fun scheduleExact(habitId: Long, event: HabitEvent, zoneId: ZoneId) {
             scheduled += Entry(habitId, event)

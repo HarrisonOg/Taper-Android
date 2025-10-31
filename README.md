@@ -13,4 +13,7 @@ Taper builds reminder plans in two steps:
    an exact alarm when a taper hits single reminders. Provide a
    `WorkRequestFactory` that tags requests with `AlarmScheduler.habitTag(habitId)`
    and a `PendingIntentFactory` that points at a manifest-registered broadcast
-   receiver to handle the alarm.
+   receiver to handle the alarm. On Android 12+ the manifest must declare
+   `android.permission.SCHEDULE_EXACT_ALARM`, and callers should fall back to
+   WorkManager when `AlarmManager.canScheduleExactAlarms()` reports that the
+   user has not granted exact alarm access.
