@@ -7,7 +7,8 @@ import com.harrisonog.taper_android.data.settings.AppSettings
 import com.harrisonog.taper_android.data.settings.dataStore
 import com.harrisonog.taper_android.data.settings.prefsToSettings
 import java.time.*
-import kotlin.math.roundToInt
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlinx.coroutines.flow.first
 
 data class WakeWindow(val start: LocalTime, val end: LocalTime)
@@ -16,6 +17,9 @@ object ScheduleGenerator {
 
     /**
      * PURE version — pass settings explicitly (recommended for tests).
+     * The generated schedule tapers monotonically between the start and end values and
+     * honours the configured wake window for every day, even if a daylight-saving change
+     * shortens or lengthens the local day.
      */
     fun generate(
         habitId: Long,
@@ -32,13 +36,23 @@ object ScheduleGenerator {
             else (end - start).toDouble() / (totalDays - 1)
 
         val events = mutableListOf<HabitEvent>()
+        val isDescending = start > end
+        val isAscending = start < end
         for (dayIdx in 0 until totalDays) {
-            val count = (start + deltaPerDay * dayIdx).roundToInt().coerceAtLeast(0)
+            val rawCount = start + deltaPerDay * dayIdx
+            val count = when {
+                isDescending -> floor(rawCount).toInt()
+                isAscending -> ceil(rawCount).toInt()
+                else -> start
+            }.coerceAtLeast(0)
             if (count <= 0) continue
 
             val date = habit.startDate.plusDays(dayIdx.toLong())
             val dayStart = LocalDateTime.of(date, settings.wakeStart)
-            val dayEnd   = LocalDateTime.of(date, settings.wakeEnd)
+            var dayEnd   = LocalDateTime.of(date, settings.wakeEnd)
+            if (!dayEnd.isAfter(dayStart)) {
+                dayEnd = dayEnd.plusDays(1)
+            }
             val secondsSpan = Duration.between(dayStart, dayEnd).seconds.coerceAtLeast(1)
 
             for (i in 0 until count) {
