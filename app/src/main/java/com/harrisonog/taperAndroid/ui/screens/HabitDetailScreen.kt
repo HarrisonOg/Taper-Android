@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
@@ -37,6 +38,7 @@ import java.util.Locale
 fun HabitDetailScreen(
     state: HabitDetailState,
     onBack: () -> Unit,
+    onEdit: (Habit) -> Unit,
     onDelete: (Habit) -> Unit,
 ) {
     val habit = state.habit
@@ -48,6 +50,15 @@ fun HabitDetailScreen(
                     TextButton(onClick = onBack) { Text("Back") }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { habit?.let(onEdit) },
+                        enabled = habit != null,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit habit",
+                        )
+                    }
                     IconButton(
                         onClick = { habit?.let(onDelete) },
                         enabled = habit != null,

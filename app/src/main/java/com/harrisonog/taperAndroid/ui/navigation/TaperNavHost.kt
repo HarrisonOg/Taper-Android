@@ -18,6 +18,7 @@ import com.harrisonog.taperAndroid.ui.HabitDetailViewModel
 import com.harrisonog.taperAndroid.ui.HabitEditorViewModel
 import com.harrisonog.taperAndroid.ui.HabitListViewModel
 import com.harrisonog.taperAndroid.ui.screens.HabitDetailScreen
+import com.harrisonog.taperAndroid.ui.screens.HabitEditScreen
 import com.harrisonog.taperAndroid.ui.screens.HabitEditorScreen
 import com.harrisonog.taperAndroid.ui.screens.HabitListScreen
 
@@ -87,11 +88,36 @@ fun TaperNavHost(
             HabitDetailScreen(
                 state = state as HabitDetailState,
                 onBack = { navController.popBackStack() },
+                onEdit = { habit ->
+                    navController.navigate("$HabitEditRoute/${habit.id}")
+                },
                 onDelete = { habit ->
                     viewModel.deleteHabit(habit).invokeOnCompletion {
                         navController.popBackStack()
                     }
                 },
+            )
+        }
+
+        composable(
+            route = "$HabitEditRoute/{habitId}",
+            arguments = listOf(navArgument("habitId") { type = NavType.LongType }),
+        ) { entry ->
+            val habitId = entry.arguments?.getLong("habitId") ?: return@composable
+            val viewModel: HabitDetailViewModel =
+                viewModel(
+                    factory = habitDetailViewModelFactory(repository, habitId),
+                )
+            val state by viewModel.ui.collectAsState()
+
+            HabitEditScreen(
+                habit = state.habit,
+                onSave = { name, description, message ->
+                    viewModel.updateHabitDetails(name, description, message) {
+                        navController.popBackStack()
+                    }
+                },
+                onCancel = { navController.popBackStack() },
             )
         }
     }
@@ -100,6 +126,7 @@ fun TaperNavHost(
 private const val HabitListRoute = "habitList"
 private const val HabitEditorRoute = "habitEditor"
 private const val HabitDetailRoute = "habitDetail"
+private const val HabitEditRoute = "habitEdit"
 
 private fun habitListViewModelFactory(repository: TaperRepository) = simpleFactory { HabitListViewModel(repository) }
 

@@ -33,6 +33,8 @@ interface TaperRepository {
 
     suspend fun updateHabitAndPlan(habit: Habit)
 
+    suspend fun updateHabitDetails(habitId: Long, name: String, description: String?, message: String)
+
     suspend fun deleteHabit(habit: Habit)
 
     suspend fun rescheduleAllActiveHabits()
@@ -73,6 +75,16 @@ class DefaultTaperRepository(
     override suspend fun updateHabitAndPlan(habit: Habit) {
         habitDao.update(habit)
         regenerateEvents(habit.id)
+    }
+
+    override suspend fun updateHabitDetails(habitId: Long, name: String, description: String?, message: String) {
+        val habit = habitDao.observe(habitId).first() ?: return
+        val updatedHabit = habit.copy(
+            name = name.trim(),
+            description = description?.trim(),
+            message = message.trim()
+        )
+        habitDao.update(updatedHabit)
     }
 
     override suspend fun deleteHabit(habit: Habit) {
@@ -118,10 +130,10 @@ class DefaultTaperRepository(
                 habit = habit,
             )
 
-        // Filter to only schedule events within the next 14 days to avoid hitting
+        // Filter to only schedule events within the next 7 days to avoid hitting
         // Android's 500 concurrent alarm limit
         val now = Instant.now()
-        val fourteenDaysFromNow = now.plusSeconds(14 * 24 * 60 * 60)
+        val fourteenDaysFromNow = now.plusSeconds(7 * 24 * 60 * 60)
 
         val upcomingEvents = allEvents.filter { event ->
             event.scheduledAt.isAfter(now) && event.scheduledAt.isBefore(fourteenDaysFromNow)
