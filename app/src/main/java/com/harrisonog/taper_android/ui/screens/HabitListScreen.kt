@@ -12,6 +12,8 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.harrisonog.taper_android.ui.HabitListState
 import com.harrisonog.taper_android.data.db.Habit
 import com.harrisonog.taper_android.ui.permissions.PermissionChecker
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,14 +50,13 @@ fun HabitListScreen(
                 items(state.items, key = { it.id }) { habit ->
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { value ->
-                            if (value == SwipeToDismissBoxValue.EndToStart) {
-                                onDelete(habit)
-                                true
-                            } else {
-                                false
-                            }
-                        }
+                            // Allow settling in revealed state, but don't auto-delete
+                            value == SwipeToDismissBoxValue.EndToStart
+                        },
+                        positionalThreshold = { distance -> distance * 0.75f }
                     )
+                    val coroutineScope = rememberCoroutineScope()
+
                     SwipeToDismissBox(
                         state = dismissState,
                         backgroundContent = {
@@ -65,11 +67,20 @@ fun HabitListScreen(
                                     .padding(horizontal = 24.dp),
                                 contentAlignment = Alignment.CenterEnd
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Delete,
-                                    contentDescription = "Delete habit",
-                                    tint = MaterialTheme.colorScheme.onErrorContainer
-                                )
+                                IconButton(
+                                    onClick = {
+                                        onDelete(habit)
+                                        coroutineScope.launch {
+                                            dismissState.reset()
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Delete,
+                                        contentDescription = "Delete habit",
+                                        tint = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
                             }
                         },
                         enableDismissFromStartToEnd = false
