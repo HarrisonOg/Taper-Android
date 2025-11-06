@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.harrisonog.taper_android"
+    namespace = "com.harrisonog.taperAndroid"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.harrisonog.taper_android"
+        applicationId = "com.harrisonog.taperAndroid"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -24,7 +24,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -55,12 +55,12 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.datastore.preferences)
 
-    //Room
+    // Room
     implementation(libs.androidx.room)
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
 
-    //Navigation
+    // Navigation
     implementation(libs.androidx.navigation.compose)
 
     // Lifecycle
@@ -75,10 +75,9 @@ dependencies {
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    //UI
+    // UI
     implementation(libs.android.lottie)
     implementation(libs.calendar.compose)
-
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
