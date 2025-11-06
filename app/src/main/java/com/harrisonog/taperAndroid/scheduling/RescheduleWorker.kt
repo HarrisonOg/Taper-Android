@@ -6,9 +6,9 @@ import androidx.work.WorkerParameters
 import com.harrisonog.taperAndroid.TaperApp
 
 /**
- * Periodic worker that reschedules all active habits to ensure the next 14 days
- * of events are always scheduled. This prevents running out of scheduled events
- * and avoids hitting Android's 500 concurrent alarm limit.
+ * Periodic worker that checks if rescheduling is needed (>7 days since last reschedule)
+ * and reschedules all active habits if necessary. This ensures the next 7 days
+ * of events are always scheduled while avoiding unnecessary work.
  */
 class RescheduleWorker(
     context: Context,
@@ -17,7 +17,8 @@ class RescheduleWorker(
     override suspend fun doWork(): Result {
         return try {
             val app = applicationContext as TaperApp
-            app.repository.rescheduleAllActiveHabits()
+            // Only reschedules if it's been >7 days since last reschedule
+            app.repository.rescheduleIfNeeded()
             Result.success()
         } catch (e: Exception) {
             e.printStackTrace()

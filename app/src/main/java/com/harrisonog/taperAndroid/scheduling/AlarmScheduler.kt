@@ -29,6 +29,12 @@ interface AlarmScheduler {
     suspend fun cancelEventsForHabit(habitId: Long)
 
     /**
+     * Cancel all scheduled notifications for all habits.
+     * This should be called before rescheduling to prevent duplicates.
+     */
+    suspend fun cancelAllEvents()
+
+    /**
      * Check if exact alarms can be scheduled (permissions granted).
      */
     fun canScheduleExactAlarms(): Boolean
@@ -95,6 +101,7 @@ class WorkManagerScheduler(private val context: Context) : AlarmScheduler {
                 .setInputData(data)
                 .addTag("habit_$habitId")
                 .addTag("event_${event.id}")
+                .addTag(NOTIFICATION_WORK_TAG)
                 .build()
 
         WorkManager.getInstance(context).enqueue(workRequest)
@@ -104,6 +111,11 @@ class WorkManagerScheduler(private val context: Context) : AlarmScheduler {
         WorkManager.getInstance(context).cancelAllWorkByTag("habit_$habitId")
     }
 
+    override suspend fun cancelAllEvents() {
+        // Cancel all notification-related work
+        WorkManager.getInstance(context).cancelAllWorkByTag(NOTIFICATION_WORK_TAG)
+    }
+
     override fun canScheduleExactAlarms(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -111,6 +123,10 @@ class WorkManagerScheduler(private val context: Context) : AlarmScheduler {
         } else {
             true
         }
+    }
+
+    companion object {
+        private const val NOTIFICATION_WORK_TAG = "habit_notifications"
     }
 }
 
@@ -166,14 +182,23 @@ class AlarmManagerScheduler(private val context: Context) : AlarmScheduler {
     }
 
     override suspend fun cancelEventsForHabit(habitId: Long) {
-        // Note: With AlarmManager, we need to cancel individual alarms
-        // This is a simplified implementation - in production, you'd want to track
-        // all scheduled alarm IDs for proper cancellation
+        // Note: With AlarmManager, individual alarms must be cancelled by their event ID
+        // This method is a placeholder - actual cancellation happens in the repository
+        // where we have access to the event database
+    }
+
+    override suspend fun cancelAllEvents() {
+        // Note: With AlarmManager, individual alarms must be cancelled by their event ID
+        // This method is a placeholder - actual cancellation happens in the repository
+        // where we have access to the event database
+    }
+
+    fun cancelEvent(eventId: Long) {
         val intent = Intent(context, AlarmReceiver::class.java)
         val pendingIntent =
             PendingIntent.getBroadcast(
                 context,
-                habitId.toInt(),
+                eventId.toInt(),
                 intent,
                 PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
             )

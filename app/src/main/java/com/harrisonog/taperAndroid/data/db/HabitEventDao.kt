@@ -14,6 +14,9 @@ interface HabitEventDao {
     @Query("SELECT * FROM habit_events WHERE id = :id")
     suspend fun getById(id: Long): HabitEvent?
 
+    @Query("SELECT * FROM habit_events")
+    suspend fun getAll(): List<HabitEvent>
+
     @Query("DELETE FROM habit_events WHERE habitId = :habitId")
     suspend fun deleteForHabit(habitId: Long)
 

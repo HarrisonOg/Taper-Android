@@ -8,6 +8,7 @@ import com.harrisonog.taperAndroid.data.db.HabitEventDao
 import com.harrisonog.taperAndroid.data.settings.AppSettings
 import com.harrisonog.taperAndroid.data.settings.observeSettings
 import com.harrisonog.taperAndroid.data.settings.saveSettings
+import com.harrisonog.taperAndroid.data.settings.updateLastRescheduleTimestamp
 import com.harrisonog.taperAndroid.logic.ScheduleGenerator
 import com.harrisonog.taperAndroid.scheduling.AlarmScheduler
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,10 @@ interface TaperRepository {
     suspend fun deleteHabit(habit: Habit)
 
     suspend fun rescheduleAllActiveHabits()
+
+    suspend fun shouldRescheduleAll(): Boolean
+
+    suspend fun rescheduleIfNeeded()
 }
 
 class DefaultTaperRepository(
@@ -89,19 +94,72 @@ class DefaultTaperRepository(
 
     override suspend fun deleteHabit(habit: Habit) {
         // Cancel all scheduled alarms for this habit
-        alarmScheduler.cancelEventsForHabit(habit.id)
+        // For AlarmManager, we need to cancel each event individually before deleting
+        val existingEvents = eventDao.observeForHabit(habit.id).first()
+        val scheduler = alarmScheduler
+        if (scheduler is com.harrisonog.taperAndroid.scheduling.AlarmManagerScheduler) {
+            existingEvents.forEach { event ->
+                scheduler.cancelEvent(event.id)
+            }
+        } else {
+            // For WorkManager, we can cancel by habit tag
+            scheduler.cancelEventsForHabit(habit.id)
+        }
+
+        // Delete events and habit from database
         eventDao.deleteForHabit(habit.id)
         habitDao.delete(habit)
     }
 
     override suspend fun rescheduleAllActiveHabits() {
+        // First, cancel ALL existing alarms to prevent duplicates
+        // This is important when rescheduling after app restart or permission changes
+
+        // Cancel all WorkManager-based notifications
+        val scheduler = alarmScheduler
+        scheduler.cancelAllEvents()
+
+        // For AlarmManager-based notifications, we need to cancel each event individually
+        // Get all events and cancel each alarm
+        val allEvents = eventDao.getAll()
+        if (scheduler is com.harrisonog.taperAndroid.scheduling.AlarmManagerScheduler) {
+            allEvents.forEach { event ->
+                scheduler.cancelEvent(event.id)
+            }
+        }
+
+        // Delete all existing events from database
+        habitDao.observeAll().first().forEach { habit ->
+            eventDao.deleteForHabit(habit.id)
+        }
+
         // Get all active habits
         val habits = habitDao.observeAll().first()
         val activeHabits = habits.filter { it.isActive }
 
-        // Reschedule each active habit
+        // Reschedule each active habit with fresh events
         activeHabits.forEach { habit ->
             regenerateEvents(habit.id, forceReschedule = true)
+        }
+
+        // Update the last reschedule timestamp
+        context.updateLastRescheduleTimestamp(Instant.now())
+    }
+
+    override suspend fun shouldRescheduleAll(): Boolean {
+        val settings = observeSettings().first()
+        val lastReschedule = settings.lastRescheduleTimestamp ?: return true
+
+        // Check if it's been more than 7 days
+        val now = Instant.now()
+        val sevenDaysAgo = now.minusSeconds(7 * 24 * 60 * 60)
+
+        return lastReschedule.isBefore(sevenDaysAgo)
+    }
+
+    override suspend fun rescheduleIfNeeded() {
+        if (shouldRescheduleAll()) {
+            rescheduleAllActiveHabits()
         }
     }
 
@@ -119,7 +177,19 @@ class DefaultTaperRepository(
         val settings = observeSettings().first()
 
         // Cancel existing alarms for this habit
-        alarmScheduler.cancelEventsForHabit(habitId)
+        // For AlarmManager, we need to cancel each event individually before deleting
+        val existingEvents = eventDao.observeForHabit(habitId).first()
+        val scheduler = alarmScheduler
+        if (scheduler is com.harrisonog.taperAndroid.scheduling.AlarmManagerScheduler) {
+            existingEvents.forEach { event ->
+                scheduler.cancelEvent(event.id)
+            }
+        } else {
+            // For WorkManager, we can cancel by habit tag
+            scheduler.cancelEventsForHabit(habitId)
+        }
+
+        // Now delete the events from database
         eventDao.deleteForHabit(habitId)
 
         // Generate new events
