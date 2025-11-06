@@ -1,5 +1,6 @@
 [versions]
 agp = "8.13.0"
+accompanist = "0.37.3"
 datastorePreferences = "1.1.7"
 desugar_jdk_libs = "2.1.5"
 kotlin = "2.1.0"
@@ -16,6 +17,7 @@ room = "2.8.1"
 workManager = "2.10.0"
 
 [libraries]
+accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
