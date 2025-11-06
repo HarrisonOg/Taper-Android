@@ -75,6 +75,10 @@ dependencies {
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
+    //UI
+    implementation(libs.android.lottie)
+    implementation(libs.calendar.compose)
+
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
