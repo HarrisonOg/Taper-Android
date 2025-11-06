@@ -17,6 +17,7 @@ room = "2.8.1"
 workManager = "2.10.0"
 lottie = "6.7.1"
 calendar-compose = "2.9.0"
+ktlint = "12.1.2"
 
 [libraries]
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
@@ -52,4 +53,5 @@ calendar-compose = { group = "com.kizitonwose.calendar", name = "compose", versi
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 
