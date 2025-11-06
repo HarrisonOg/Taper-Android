@@ -1,6 +1,8 @@
 package com.harrisonog.taperAndroid.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -33,16 +35,40 @@ fun HabitEditorScreen(
                 label = { Text("Name") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    if (name.isNotEmpty()) {
+                        IconButton(onClick = { name = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        }
+                    }
+                }
             )
             OutlinedTextField(
                 desc,
                 { desc = it },
                 label = { Text("Description (optional)") },
                 modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    if (desc.isNotEmpty()) {
+                        IconButton(onClick = { desc = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        }
+                    }
+                }
             )
-            OutlinedTextField(message, {
-                message = it
-            }, label = { Text("Notification message") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                message,
+                { message = it },
+                label = { Text("Notification message") },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    if (message.isNotEmpty()) {
+                        IconButton(onClick = { message = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        }
+                    }
+                }
+            )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 NumberField("Start/day", startPerDay, { startPerDay = it.coerceAtLeast(0) }, Modifier.weight(1f))
@@ -100,6 +126,13 @@ private fun NumberField(
         label = { Text(label) },
         singleLine = true,
         modifier = modifier,
+        trailingIcon = {
+            if (text.isNotEmpty()) {
+                IconButton(onClick = { text = "" }) {
+                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                }
+            }
+        }
     )
 }
 
