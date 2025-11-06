@@ -18,41 +18,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.permissions.*
 
 /**
  * Composable that checks for exact alarm and notification permissions
  * and displays a UI to request them if needed.
  */
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun PermissionChecker(
     onAllPermissionsGranted: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val alarmManager = remember {
-        context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    }
 
     var hasExactAlarmPermission by remember {
         mutableStateOf(canScheduleExactAlarms(context))
     }
 
-    var hasNotificationPermission by remember {
-        mutableStateOf(
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED
-        )
+    // Use Accompanist for notification permission
+    val notificationPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+        null
     }
 
-    // Launcher for notification permission
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasNotificationPermission = isGranted
-        if (isGranted && hasExactAlarmPermission) {
-            onAllPermissionsGranted()
-        }
-    }
+    val hasNotificationPermission = notificationPermissionState?.status?.isGranted ?: true
 
     // Launcher for exact alarm settings
     val exactAlarmSettingsLauncher = rememberLauncherForActivityResult(
@@ -72,13 +62,9 @@ fun PermissionChecker(
 
     if (!hasNotificationPermission || !hasExactAlarmPermission) {
         PermissionRequestCard(
+            notificationPermissionState = notificationPermissionState,
             hasNotificationPermission = hasNotificationPermission,
             hasExactAlarmPermission = hasExactAlarmPermission,
-            onRequestNotifications = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            },
             onRequestExactAlarms = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
@@ -91,11 +77,12 @@ fun PermissionChecker(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun PermissionRequestCard(
+    notificationPermissionState: PermissionState?,
     hasNotificationPermission: Boolean,
     hasExactAlarmPermission: Boolean,
-    onRequestNotifications: () -> Unit,
     onRequestExactAlarms: () -> Unit
 ) {
     Card(
@@ -126,14 +113,19 @@ private fun PermissionRequestCard(
                 )
             }
 
-            if (!hasNotificationPermission) {
+            if (!hasNotificationPermission && notificationPermissionState != null) {
                 Text(
-                    text = "Taper needs notification permission to remind you about your habits.",
+                    text = if (notificationPermissionState.status.shouldShowRationale) {
+                        "Taper needs notification permission to remind you about your habits. " +
+                        "Please grant this permission to receive timely reminders."
+                    } else {
+                        "Taper needs notification permission to remind you about your habits."
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )
                 Button(
-                    onClick = onRequestNotifications,
+                    onClick = { notificationPermissionState.launchPermissionRequest() },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Grant Notification Permission")
