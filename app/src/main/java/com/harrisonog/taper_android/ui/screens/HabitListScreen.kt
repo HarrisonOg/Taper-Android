@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.harrisonog.taper_android.ui.HabitListState
 import com.harrisonog.taper_android.data.db.Habit
+import com.harrisonog.taper_android.ui.permissions.PermissionChecker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,12 +34,16 @@ fun HabitListScreen(
             FloatingActionButton(onClick = onAdd) { Text("+") }
         }
     ) { pad ->
-        if (state.items.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(pad), contentAlignment = Alignment.Center) {
-                Text("No habits yet. Tap + to create one.")
-            }
-        } else {
-            LazyColumn(Modifier.fillMaxSize().padding(pad)) {
+        Column(Modifier.fillMaxSize().padding(pad)) {
+            // Show permission request if needed
+            PermissionChecker()
+
+            if (state.items.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No habits yet. Tap + to create one.")
+                }
+            } else {
+                LazyColumn(Modifier.fillMaxSize()) {
                 items(state.items, key = { it.id }) { habit ->
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { value ->
@@ -91,6 +96,7 @@ fun HabitListScreen(
                     HorizontalDivider()
                 }
             }
+        }
         }
     }
 }
