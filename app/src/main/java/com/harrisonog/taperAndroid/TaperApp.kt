@@ -1,9 +1,14 @@
 package com.harrisonog.taperAndroid
 
 import android.app.Application
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.harrisonog.taperAndroid.data.DefaultTaperRepository
 import com.harrisonog.taperAndroid.data.TaperRepository
 import com.harrisonog.taperAndroid.data.db.AppDatabase
+import com.harrisonog.taperAndroid.scheduling.RescheduleWorker
+import java.util.concurrent.TimeUnit
 
 /**
  * Application entry point responsible for wiring up the data layer.
@@ -27,5 +32,22 @@ class TaperApp : Application() {
                 habitDao = database.habitDao(),
                 eventDao = database.habitEventDao(),
             )
+
+        // Schedule periodic rescheduling to keep the next 14 days of events scheduled
+        schedulePeriodicRescheduling()
+    }
+
+    private fun schedulePeriodicRescheduling() {
+        val rescheduleWork =
+            PeriodicWorkRequestBuilder<RescheduleWorker>(
+                repeatInterval = 1,
+                repeatIntervalTimeUnit = TimeUnit.DAYS
+            ).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "habit_reschedule",
+            ExistingPeriodicWorkPolicy.KEEP,
+            rescheduleWork
+        )
     }
 }

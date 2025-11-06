@@ -12,6 +12,7 @@ import com.harrisonog.taperAndroid.logic.ScheduleGenerator
 import com.harrisonog.taperAndroid.scheduling.AlarmScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import java.time.Instant
 import java.time.LocalTime
 
 interface TaperRepository {
@@ -33,6 +34,8 @@ interface TaperRepository {
     suspend fun updateHabitAndPlan(habit: Habit)
 
     suspend fun deleteHabit(habit: Habit)
+
+    suspend fun rescheduleAllActiveHabits()
 }
 
 class DefaultTaperRepository(
@@ -79,11 +82,25 @@ class DefaultTaperRepository(
         habitDao.delete(habit)
     }
 
-    private suspend fun regenerateEvents(habitId: Long) {
+    override suspend fun rescheduleAllActiveHabits() {
+        // Get all active habits
+        val habits = habitDao.observeAll().first()
+        val activeHabits = habits.filter { it.isActive }
+
+        // Reschedule each active habit
+        activeHabits.forEach { habit ->
+            regenerateEvents(habit.id, forceReschedule = true)
+        }
+    }
+
+    private suspend fun regenerateEvents(
+        habitId: Long,
+        forceReschedule: Boolean = false
+    ) {
         val habit = habitDao.observe(habitId).first() ?: return
 
-        // Only schedule alarms if habit is active and scheduler can schedule exact alarms
-        if (!habit.isActive || !alarmScheduler.canScheduleExactAlarms()) {
+        // Skip if habit is not active
+        if (!habit.isActive) {
             return
         }
 
@@ -94,22 +111,33 @@ class DefaultTaperRepository(
         eventDao.deleteForHabit(habitId)
 
         // Generate new events
-        val events =
+        val allEvents =
             ScheduleGenerator.generateUsingPrefs(
                 context = context,
                 habitId = habitId,
                 habit = habit,
             )
 
-        if (events.isEmpty()) return
+        // Filter to only schedule events within the next 14 days to avoid hitting
+        // Android's 500 concurrent alarm limit
+        val now = Instant.now()
+        val fourteenDaysFromNow = now.plusSeconds(14 * 24 * 60 * 60)
+
+        val upcomingEvents = allEvents.filter { event ->
+            event.scheduledAt.isAfter(now) && event.scheduledAt.isBefore(fourteenDaysFromNow)
+        }
+
+        if (upcomingEvents.isEmpty()) return
 
         // Insert events into database
-        eventDao.insertAll(events)
+        eventDao.insertAll(upcomingEvents)
 
         // Get the inserted events with their IDs
         val insertedEvents = eventDao.observeForHabit(habitId).first()
 
         // Schedule alarms for each event
+        // Now we always attempt to schedule, even without exact alarm permission
+        // The AlarmScheduler will use a fallback mechanism
         insertedEvents.forEach { event ->
             alarmScheduler.scheduleEvent(
                 habitId = habitId,
