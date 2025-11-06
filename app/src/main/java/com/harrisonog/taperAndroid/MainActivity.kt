@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
     private var hasRequestedPermissions = false
+    private var permissionsJustGranted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,10 +38,8 @@ class MainActivity : ComponentActivity() {
         ) { isGranted ->
             if (isGranted) {
                 // After notification permission is granted, check exact alarm permission
+                permissionsJustGranted = true
                 checkExactAlarmPermission()
-            } else {
-                // User denied notification permission - reschedule anyway with fallback
-                rescheduleHabits()
             }
         }
 
@@ -65,9 +64,16 @@ class MainActivity : ComponentActivity() {
             hasRequestedPermissions = true
             checkAndRequestPermissions()
         } else {
-            // Reschedule if permissions were granted from settings
-            if (PermissionHelper.hasAllPermissions(this)) {
-                rescheduleHabits()
+            // If permissions were just granted, reschedule all habits
+            if (permissionsJustGranted && PermissionHelper.hasAllPermissions(this)) {
+                permissionsJustGranted = false
+                rescheduleAllHabits()
+            } else if (PermissionHelper.hasAllPermissions(this)) {
+                // Permissions already granted - only reschedule if needed (>7 days)
+                rescheduleIfNeeded()
+            } else {
+                // Permissions were revoked - re-prompt
+                checkAndRequestPermissions()
             }
         }
     }
@@ -86,16 +92,23 @@ class MainActivity : ComponentActivity() {
         if (!PermissionHelper.hasExactAlarmPermission(this)) {
             // Open settings to request exact alarm permission
             PermissionHelper.requestExactAlarmPermission(this)
-        } else {
-            // All permissions granted, reschedule habits
-            rescheduleHabits()
+        } else if (permissionsJustGranted) {
+            // All permissions granted for the first time, reschedule all habits
+            rescheduleAllHabits()
         }
     }
 
-    private fun rescheduleHabits() {
+    private fun rescheduleAllHabits() {
         val repository = (application as TaperApp).repository
         lifecycleScope.launch {
             repository.rescheduleAllActiveHabits()
+        }
+    }
+
+    private fun rescheduleIfNeeded() {
+        val repository = (application as TaperApp).repository
+        lifecycleScope.launch {
+            repository.rescheduleIfNeeded()
         }
     }
 }
