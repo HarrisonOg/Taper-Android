@@ -89,6 +89,7 @@ fun HabitListScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surface)
                                 .clickable { onOpen(habit.id) }
                                 .padding(horizontal = 8.dp)
                         )
