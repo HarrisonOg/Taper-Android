@@ -9,6 +9,7 @@ import com.harrisonog.taper_android.data.settings.AppSettings
 import com.harrisonog.taper_android.data.settings.observeSettings
 import com.harrisonog.taper_android.data.settings.saveSettings
 import com.harrisonog.taper_android.logic.ScheduleGenerator
+import com.harrisonog.taper_android.scheduling.AlarmScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.LocalTime
@@ -31,6 +32,10 @@ class DefaultTaperRepository(
     private val habitDao: HabitDao,
     private val eventDao: HabitEventDao,
 ) : TaperRepository {
+
+    private val alarmScheduler: AlarmScheduler by lazy {
+        AlarmScheduler.create(context)
+    }
     // Room-backed domain data
     override fun observeHabits() = habitDao.observeAll()
     override fun observeHabit(id: Long) = habitDao.observe(id)
@@ -54,18 +59,49 @@ class DefaultTaperRepository(
     }
 
     override suspend fun deleteHabit(habit: Habit) {
-        eventDao.deleteForHabit(habit.id); habitDao.delete(habit)
+        // Cancel all scheduled alarms for this habit
+        alarmScheduler.cancelEventsForHabit(habit.id)
+        eventDao.deleteForHabit(habit.id)
+        habitDao.delete(habit)
     }
 
     private suspend fun regenerateEvents(habitId: Long) {
         val habit = habitDao.observe(habitId).first() ?: return
+
+        // Only schedule alarms if habit is active and scheduler can schedule exact alarms
+        if (!habit.isActive || !alarmScheduler.canScheduleExactAlarms()) {
+            return
+        }
+
         val settings = observeSettings().first()
+
+        // Cancel existing alarms for this habit
+        alarmScheduler.cancelEventsForHabit(habitId)
         eventDao.deleteForHabit(habitId)
+
+        // Generate new events
         val events = ScheduleGenerator.generateUsingPrefs(
             context = context,
             habitId = habitId,
             habit = habit
         )
-        if (events.isNotEmpty()) eventDao.insertAll(events)
+
+        if (events.isEmpty()) return
+
+        // Insert events into database
+        eventDao.insertAll(events)
+
+        // Get the inserted events with their IDs
+        val insertedEvents = eventDao.observeForHabit(habitId).first()
+
+        // Schedule alarms for each event
+        insertedEvents.forEach { event ->
+            alarmScheduler.scheduleEvent(
+                habitId = habitId,
+                habitName = habit.name,
+                message = habit.message,
+                event = event
+            )
+        }
     }
 }

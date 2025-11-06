@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import com.harrisonog.taper_android.notifications.NotificationHelper
 import com.harrisonog.taper_android.ui.navigation.TaperNavHost
 import com.harrisonog.taper_android.ui.theme.TaperAndroidTheme
 
@@ -18,6 +19,10 @@ import com.harrisonog.taper_android.ui.theme.TaperAndroidTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize notification channel
+        NotificationHelper.createNotificationChannel(this)
+
         enableEdgeToEdge()
         setContent {
             val repository = (application as TaperApp).repository

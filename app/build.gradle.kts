@@ -68,6 +68,9 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
