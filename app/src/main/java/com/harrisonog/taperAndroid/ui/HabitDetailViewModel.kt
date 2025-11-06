@@ -16,7 +16,7 @@ data class HabitDetailState(
     val events: List<HabitEvent> = emptyList(),
 )
 
-class HabitDetailViewModel(private val repo: TaperRepository, habitId: Long) : ViewModel() {
+class HabitDetailViewModel(private val repo: TaperRepository, private val habitId: Long) : ViewModel() {
     val ui =
         combine(
             repo.observeHabit(habitId),
@@ -31,5 +31,11 @@ class HabitDetailViewModel(private val repo: TaperRepository, habitId: Long) : V
     fun deleteHabit(habit: Habit): Job =
         viewModelScope.launch {
             repo.deleteHabit(habit)
+        }
+
+    fun updateHabitDetails(name: String, description: String?, message: String, onDone: () -> Unit) =
+        viewModelScope.launch {
+            repo.updateHabitDetails(habitId, name, description, message)
+            onDone()
         }
 }
