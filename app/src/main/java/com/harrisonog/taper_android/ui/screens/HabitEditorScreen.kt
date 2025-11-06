@@ -32,9 +32,9 @@ fun HabitEditorScreen(
             OutlinedTextField(message, { message = it }, label = { Text("Notification message") }, modifier = Modifier.fillMaxWidth())
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                NumberField("Start/day", startPerDay) { startPerDay = it.coerceAtLeast(0) }
-                NumberField("End/day", endPerDay) { endPerDay = it.coerceAtLeast(0) }
-                NumberField("Weeks", weeks) { weeks = it.coerceAtLeast(1) }
+                NumberField("Start/day", startPerDay, { startPerDay = it.coerceAtLeast(0) }, Modifier.weight(1f))
+                NumberField("End/day", endPerDay, { endPerDay = it.coerceAtLeast(0) }, Modifier.weight(1f))
+                NumberField("Weeks", weeks, { weeks = it.coerceAtLeast(1) }, Modifier.weight(1f))
             }
 
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -64,12 +64,18 @@ fun HabitEditorScreen(
 }
 
 @Composable
-private fun NumberField(label: String, value: Int, onChange: (Int) -> Unit) {
+private fun NumberField(label: String, value: Int, onChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+    var text by remember(value) { mutableStateOf(value.toString()) }
+
     OutlinedTextField(
-        value = value.toString(),
-        onValueChange = { s -> onChange(s.toIntOrNull() ?: value) },
+        value = text,
+        onValueChange = { s ->
+            text = s
+            s.toIntOrNull()?.let { onChange(it) }
+        },
         label = { Text(label) },
         singleLine = true,
+        modifier = modifier
     )
 }
 
