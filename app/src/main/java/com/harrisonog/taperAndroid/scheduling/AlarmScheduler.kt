@@ -35,8 +35,9 @@ interface AlarmScheduler {
 
     companion object {
         /**
-         * Creates the appropriate scheduler based on system capabilities and permissions.
-         * Prefers WorkManager but falls back to AlarmManager if needed.
+         * Creates the appropriate scheduler based on system capabilities.
+         * - With exact alarm permission: Uses AlarmManager for precise timing
+         * - Without exact alarm permission: Uses WorkManager (inexact but reliable)
          */
         fun create(context: Context): AlarmScheduler {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -49,12 +50,12 @@ interface AlarmScheduler {
                     true
                 }
 
-            // Prefer WorkManager for better reliability and battery optimization
+            // Use AlarmManager for exact timing when permission is granted
+            // Use WorkManager when exact alarms aren't available (better battery optimization)
             return if (canScheduleExact) {
-                WorkManagerScheduler(context)
-            } else {
-                // Fallback to AlarmManager (though it won't be exact without permission)
                 AlarmManagerScheduler(context)
+            } else {
+                WorkManagerScheduler(context)
             }
         }
     }
@@ -62,7 +63,11 @@ interface AlarmScheduler {
 
 /**
  * WorkManager-based implementation (preferred).
- * Uses WorkManager's exact timing capabilities for scheduling.
+ * Uses WorkManager's scheduling capabilities for delayed work.
+ *
+ * Note: WorkManager uses inexact timing for battery optimization.
+ * For more precise timing when exact alarm permission is available,
+ * consider using AlarmManager instead.
  */
 class WorkManagerScheduler(private val context: Context) : AlarmScheduler {
     override suspend fun scheduleEvent(
