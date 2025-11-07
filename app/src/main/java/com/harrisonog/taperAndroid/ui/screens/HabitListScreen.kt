@@ -2,6 +2,7 @@ package com.harrisonog.taperAndroid.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,7 +14,12 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,26 +56,47 @@ fun HabitListScreen(
             FloatingActionButton(onClick = onAdd) { Text("+") }
         },
     ) { pad ->
-        Column(Modifier.fillMaxSize().padding(pad)) {
-            // Show permission request if needed
-            PermissionChecker()
+        // Track which habit is currently swiped to reveal delete button
+        var swipedHabitId by remember { mutableStateOf<Long?>(null) }
 
-            if (state.items.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No habits yet. Tap + to create one.")
-                }
-            } else {
-                LazyColumn(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().padding(pad)) {
+                // Show permission request if needed
+                PermissionChecker()
+
+                if (state.items.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No habits yet. Tap + to create one.")
+                    }
+                } else {
+                    LazyColumn(Modifier.fillMaxSize()) {
                     items(state.items, key = { it.id }) { habit ->
                         val dismissState =
                             rememberSwipeToDismissBoxState(
                                 confirmValueChange = { value ->
-                                    // Allow settling in revealed state, but don't auto-delete
-                                    value == SwipeToDismissBoxValue.EndToStart
+                                    when (value) {
+                                        SwipeToDismissBoxValue.EndToStart -> {
+                                            // Update swiped habit when this one is swiped
+                                            swipedHabitId = habit.id
+                                            true
+                                        }
+                                        SwipeToDismissBoxValue.Settled -> {
+                                            // Allow resetting to settled state
+                                            true
+                                        }
+                                        else -> false
+                                    }
                                 },
                                 positionalThreshold = { distance -> distance * 0.75f },
                             )
                         val coroutineScope = rememberCoroutineScope()
+
+                        // Reset this item if another habit is swiped or if swipedHabitId is cleared
+                        LaunchedEffect(swipedHabitId) {
+                            if (swipedHabitId != habit.id) {
+                                dismissState.reset()
+                            }
+                        }
 
                         SwipeToDismissBox(
                             state = dismissState,
@@ -86,6 +113,7 @@ fun HabitListScreen(
                                             onDelete(habit)
                                             coroutineScope.launch {
                                                 dismissState.reset()
+                                                swipedHabitId = null
                                             }
                                         },
                                     ) {
@@ -117,13 +145,37 @@ fun HabitListScreen(
                                     Modifier
                                         .fillMaxWidth()
                                         .background(MaterialTheme.colorScheme.surface)
-                                        .clickable { onOpen(habit.id) }
+                                        .clickable {
+                                            // If swiped, dismiss swipe; otherwise open detail
+                                            if (swipedHabitId == habit.id) {
+                                                swipedHabitId = null
+                                            } else {
+                                                onOpen(habit.id)
+                                            }
+                                        }
                                         .padding(horizontal = 8.dp),
                             )
                         }
                         HorizontalDivider()
                     }
                 }
+            }
+        }
+
+            // Transparent overlay when any item is swiped
+            // Tapping it dismisses the swiped item
+            if (swipedHabitId != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Color.Transparent)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            swipedHabitId = null
+                        }
+                )
             }
         }
     }
