@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -34,7 +36,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun HabitDetailScreen(
     state: HabitDetailState,
@@ -43,6 +45,11 @@ fun HabitDetailScreen(
     onDelete: (Habit) -> Unit,
 ) {
     val habit = state.habit
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { 2 }
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,14 +90,55 @@ fun HabitDetailScreen(
         Column(Modifier.fillMaxSize().padding(pad)) {
             HabitDetailHeader(habit)
 
-            // Weekly Dashboard
-            WeeklyResponseDashboard(
-                events = state.events,
-                isGoodHabit = habit.isGoodHabit,
-                modifier = Modifier.padding(16.dp)
-            )
+            // Page indicators
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(2) { page ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (pagerState.currentPage == page) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                }
+                            )
+                    )
+                }
+            }
 
-            HabitPlannedNotificationsSection(state, habit)
+            // Swipeable content
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                when (page) {
+                    0 -> {
+                        // Weekly Dashboard page
+                        Column(Modifier.fillMaxSize()) {
+                            WeeklyResponseDashboard(
+                                events = state.events,
+                                isGoodHabit = habit.isGoodHabit,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                    1 -> {
+                        // Planned Notifications page
+                        Column(Modifier.fillMaxSize()) {
+                            HabitPlannedNotificationsSection(state, habit)
+                        }
+                    }
+                }
+            }
         }
     }
 }
