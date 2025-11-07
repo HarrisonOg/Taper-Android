@@ -89,6 +89,67 @@ fun HabitDetailScreen(
                 }
             }
 
+            // Response counters
+            val completedCount = state.events.count { it.responseType == "completed" }
+            val deniedCount = state.events.count { it.responseType == "denied" }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = completedCount.toString(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "Completed",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = deniedCount.toString(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = "Denied",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+
             Text(
                 "Planned notifications",
                 style = MaterialTheme.typography.titleMedium,
@@ -265,8 +326,30 @@ private fun CalendarDay(
 private fun EventRow(event: HabitEvent) {
     val fmt = DateTimeFormatter.ofPattern("EEE, MMM d • h:mm a")
     val local = event.scheduledAt.atZone(ZoneId.systemDefault()).toLocalDateTime()
+
+    val statusText = when {
+        event.responseType == "completed" -> "✓ Completed"
+        event.responseType == "denied" -> "✗ Denied"
+        event.responseType == "snoozed" -> "⏰ Snoozed"
+        event.isSnoozed -> "Snoozed notification"
+        event.sentAt != null -> "Sent"
+        else -> "Scheduled"
+    }
+
+    val statusColor = when {
+        event.responseType == "completed" -> MaterialTheme.colorScheme.primary
+        event.responseType == "denied" -> MaterialTheme.colorScheme.error
+        event.responseType == "snoozed" -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     ListItem(
         headlineContent = { Text(fmt.format(local)) },
-        supportingContent = { Text(if (event.sentAt == null) "Scheduled" else "Sent") },
+        supportingContent = {
+            Text(
+                text = statusText,
+                color = statusColor
+            )
+        },
     )
 }
