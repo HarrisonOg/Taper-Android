@@ -161,22 +161,6 @@ fun HabitListScreen(
                 }
             }
         }
-
-            // Transparent overlay when any item is swiped
-            // Tapping it dismisses the swiped item
-            if (swipedHabitId != null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(androidx.compose.ui.graphics.Color.Transparent)
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            swipedHabitId = null
-                        }
-                )
-            }
         }
     }
 }
