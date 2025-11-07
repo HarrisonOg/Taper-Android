@@ -21,6 +21,7 @@ import com.harrisonog.taperAndroid.ui.screens.HabitDetailScreen
 import com.harrisonog.taperAndroid.ui.screens.HabitEditScreen
 import com.harrisonog.taperAndroid.ui.screens.HabitEditorScreen
 import com.harrisonog.taperAndroid.ui.screens.HabitListScreen
+import com.harrisonog.taperAndroid.ui.screens.SettingsScreen
 
 @Composable
 fun TaperNavHost(
@@ -46,6 +47,25 @@ fun TaperNavHost(
                 onAdd = { navController.navigate(HabitEditorRoute) },
                 onOpen = { habitId -> navController.navigate("$HabitDetailRoute/$habitId") },
                 onDelete = { habit -> viewModel.deleteHabit(habit) },
+                onSettings = { navController.navigate(SettingsRoute) },
+            )
+        }
+
+        composable(SettingsRoute) {
+            val viewModel: HabitListViewModel =
+                viewModel(
+                    factory = habitListViewModelFactory(repository),
+                )
+            val settings by repository.observeSettings().collectAsState(initial = null)
+
+            SettingsScreen(
+                settings = settings,
+                onSave = { wakeStart, wakeEnd ->
+                    viewModel.updateSettings(wakeStart, wakeEnd) {
+                        navController.popBackStack()
+                    }
+                },
+                onBack = { navController.popBackStack() },
             )
         }
 
@@ -127,6 +147,7 @@ private const val HabitListRoute = "habitList"
 private const val HabitEditorRoute = "habitEditor"
 private const val HabitDetailRoute = "habitDetail"
 private const val HabitEditRoute = "habitEdit"
+private const val SettingsRoute = "settings"
 
 private fun habitListViewModelFactory(repository: TaperRepository) = simpleFactory { HabitListViewModel(repository) }
 

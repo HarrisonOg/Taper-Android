@@ -30,6 +30,11 @@ interface TaperRepository {
         wakeEnd: LocalTime,
     )
 
+    suspend fun updateSettingsAndReschedule(
+        wakeStart: LocalTime,
+        wakeEnd: LocalTime,
+    )
+
     suspend fun createHabitAndPlan(habit: Habit): Long
 
     suspend fun updateHabitAndPlan(habit: Habit)
@@ -69,6 +74,17 @@ class DefaultTaperRepository(
         wakeEnd: LocalTime,
     ) {
         context.saveSettings(AppSettings(wakeStart, wakeEnd))
+    }
+
+    override suspend fun updateSettingsAndReschedule(
+        wakeStart: LocalTime,
+        wakeEnd: LocalTime,
+    ) {
+        // Update the settings
+        context.saveSettings(AppSettings(wakeStart, wakeEnd))
+
+        // Reschedule all active habits with the new wake window
+        rescheduleAllActiveHabits()
     }
 
     override suspend fun createHabitAndPlan(habit: Habit): Long {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -29,9 +30,22 @@ fun HabitListScreen(
     onAdd: () -> Unit,
     onOpen: (Long) -> Unit,
     onDelete: (Habit) -> Unit,
+    onSettings: () -> Unit,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Taper") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Taper") },
+                actions = {
+                    IconButton(onClick = onSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAdd) { Text("+") }
         },
