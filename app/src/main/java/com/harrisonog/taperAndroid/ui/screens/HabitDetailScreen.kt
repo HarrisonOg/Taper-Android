@@ -47,7 +47,7 @@ fun HabitDetailScreen(
     val habit = state.habit
     val pagerState = rememberPagerState(
         initialPage = 0,
-        pageCount = { 2 }
+        pageCount = { 3 }
     )
 
     Scaffold(
@@ -98,7 +98,7 @@ fun HabitDetailScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                repeat(2) { page ->
+                repeat(3) { page ->
                     Box(
                         modifier = Modifier
                             .padding(horizontal = 4.dp)
@@ -137,6 +137,16 @@ fun HabitDetailScreen(
                             HabitPlannedNotificationsSection(state, habit)
                         }
                     }
+                    2 -> {
+                        // Total Statistics page
+                        Column(Modifier.fillMaxSize()) {
+                            HabitStatisticsPage(
+                                habit = habit,
+                                events = state.events,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -171,6 +181,311 @@ private fun HabitPlannedNotificationsSection(
         isGoodHabit = habit.isGoodHabit,
         modifier = Modifier.padding(16.dp)
     )
+}
+
+@Composable
+private fun HabitStatisticsPage(
+    habit: Habit,
+    events: List<HabitEvent>,
+    modifier: Modifier = Modifier,
+) {
+    val startDate = habit.startDate
+    val today = LocalDate.now()
+    val currentDay = java.time.temporal.ChronoUnit.DAYS.between(startDate, today).toInt() + 1
+    val totalDays = habit.weeks * 7
+    val daysLeft = (totalDays - currentDay + 1).coerceAtLeast(0)
+
+    // Calculate statistics
+    val completedCount = events.count { it.responseType == "completed" }
+    val deniedCount = events.count { it.responseType == "denied" }
+    val snoozedCount = events.count { it.responseType == "snoozed" }
+
+    // Find events that were snoozed and then had a follow-up response
+    val snoozedEventIds = events.filter { it.responseType == "snoozed" }.map { it.id }.toSet()
+    val followUpEvents = events.filter { it.isSnoozed }
+    val snoozedThenCompleted = followUpEvents.count { it.responseType == "completed" }
+    val snoozedThenDenied = followUpEvents.count { it.responseType == "denied" }
+
+    // Calculate success rate
+    val totalResponded = completedCount + deniedCount
+    val successRate = if (totalResponded > 0) {
+        if (habit.isGoodHabit) {
+            (completedCount.toFloat() / totalResponded.toFloat()) * 100
+        } else {
+            (deniedCount.toFloat() / totalResponded.toFloat()) * 100
+        }
+    } else {
+        0f
+    }
+
+    LazyColumn(modifier = modifier) {
+        item {
+            Text(
+                text = "Overall Statistics",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+
+        // Progress Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Progress",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "Start Date",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = startDate.format(DateTimeFormatter.ofPattern("MMM d, yyyy")),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Current Day",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "Day $currentDay of $totalDays",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Days Remaining",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = "$daysLeft days",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        }
+
+        // Success Rate Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (successRate >= 70) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else if (successRate >= 40) {
+                        MaterialTheme.colorScheme.tertiaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.errorContainer
+                    }
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Success Rate",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (successRate >= 70) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else if (successRate >= 40) {
+                            MaterialTheme.colorScheme.onTertiaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onErrorContainer
+                        }
+                    )
+                    Text(
+                        text = String.format("%.1f%%", successRate),
+                        style = MaterialTheme.typography.displayMedium,
+                        color = if (successRate >= 70) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else if (successRate >= 40) {
+                            MaterialTheme.colorScheme.onTertiaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onErrorContainer
+                        }
+                    )
+                    Text(
+                        text = if (habit.isGoodHabit) {
+                            "Completed / Total Responses"
+                        } else {
+                            "Denied / Total Responses"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (successRate >= 70) {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        } else if (successRate >= 40) {
+                            MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                        } else {
+                            MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                        }
+                    )
+                }
+            }
+        }
+
+        // Response Statistics Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Response Statistics",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    // Completed
+                    StatisticRow(
+                        label = "Completed",
+                        count = completedCount,
+                        color = if (habit.isGoodHabit) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
+                    )
+
+                    // Denied
+                    StatisticRow(
+                        label = "Denied",
+                        count = deniedCount,
+                        color = if (habit.isGoodHabit) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+
+                    // Snoozed
+                    StatisticRow(
+                        label = "Snoozed",
+                        count = snoozedCount,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+
+                    if (snoozedCount > 0) {
+                        // Indented sub-statistics for snoozed events
+                        Column(
+                            modifier = Modifier.padding(start = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            StatisticRow(
+                                label = "→ Then Completed",
+                                count = snoozedThenCompleted,
+                                color = if (habit.isGoodHabit) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                },
+                                isSecondary = true
+                            )
+
+                            StatisticRow(
+                                label = "→ Then Denied",
+                                count = snoozedThenDenied,
+                                color = if (habit.isGoodHabit) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                },
+                                isSecondary = true
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatisticRow(
+    label: String,
+    count: Int,
+    color: androidx.compose.ui.graphics.Color,
+    isSecondary: Boolean = false,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(if (isSecondary) 6.dp else 10.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Text(
+                text = label,
+                style = if (isSecondary) {
+                    MaterialTheme.typography.bodySmall
+                } else {
+                    MaterialTheme.typography.bodyMedium
+                }
+            )
+        }
+        Text(
+            text = count.toString(),
+            style = if (isSecondary) {
+                MaterialTheme.typography.bodySmall
+            } else {
+                MaterialTheme.typography.titleMedium
+            },
+            color = color
+        )
+    }
 }
 
 @Composable
