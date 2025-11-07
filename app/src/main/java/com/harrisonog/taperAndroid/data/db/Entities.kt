@@ -34,4 +34,7 @@ data class HabitEvent(
     val habitId: Long,
     val scheduledAt: Instant, // exact time we plan to fire
     val sentAt: Instant? = null, // null until delivered (alarm scheduling later)
+    val responseType: String? = null, // "completed", "denied", or null
+    val respondedAt: Instant? = null, // when the user responded
+    val isSnoozed: Boolean = false, // true if this event was created from a snooze
 )

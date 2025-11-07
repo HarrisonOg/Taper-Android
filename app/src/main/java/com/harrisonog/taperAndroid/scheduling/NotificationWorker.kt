@@ -29,6 +29,7 @@ class NotificationWorker(
             context = applicationContext,
             habitName = habitName,
             message = message,
+            habitId = habitId,
             eventId = eventId,
         )
 
