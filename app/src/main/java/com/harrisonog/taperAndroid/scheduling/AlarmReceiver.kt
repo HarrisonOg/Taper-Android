@@ -31,6 +31,7 @@ class AlarmReceiver : BroadcastReceiver() {
             context = context,
             habitName = habitName,
             message = message,
+            habitId = habitId,
             eventId = eventId,
         )
 

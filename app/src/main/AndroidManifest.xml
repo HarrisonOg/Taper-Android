@@ -38,6 +38,12 @@
             android:name=".scheduling.AlarmReceiver"
             android:enabled="true"
             android:exported="false" />
+
+        <!-- Receiver for notification action buttons -->
+        <receiver
+            android:name=".notifications.NotificationActionReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

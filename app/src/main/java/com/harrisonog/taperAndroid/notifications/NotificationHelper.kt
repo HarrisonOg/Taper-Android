@@ -2,7 +2,9 @@ package com.harrisonog.taperAndroid.notifications
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -37,15 +39,57 @@ object NotificationHelper {
      * @param context Application context
      * @param habitName Name of the habit
      * @param message Custom message for the habit
+     * @param habitId ID of the habit
      * @param eventId Unique ID for this specific event
      */
     fun showNotification(
         context: Context,
         habitName: String,
         message: String,
+        habitId: Long,
         eventId: Long,
     ) {
         val notificationId = (NOTIFICATION_ID_BASE + (eventId % 10000)).toInt()
+
+        // Create action intents
+        val completedIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            putExtra(NotificationActionReceiver.EXTRA_EVENT_ID, eventId)
+            putExtra(NotificationActionReceiver.EXTRA_HABIT_ID, habitId)
+            putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+            putExtra(NotificationActionReceiver.EXTRA_ACTION, NotificationActionReceiver.ACTION_COMPLETED)
+        }
+        val completedPendingIntent = PendingIntent.getBroadcast(
+            context,
+            (notificationId * 3 + 0),
+            completedIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            putExtra(NotificationActionReceiver.EXTRA_EVENT_ID, eventId)
+            putExtra(NotificationActionReceiver.EXTRA_HABIT_ID, habitId)
+            putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+            putExtra(NotificationActionReceiver.EXTRA_ACTION, NotificationActionReceiver.ACTION_SNOOZE)
+        }
+        val snoozePendingIntent = PendingIntent.getBroadcast(
+            context,
+            (notificationId * 3 + 1),
+            snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val denyIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            putExtra(NotificationActionReceiver.EXTRA_EVENT_ID, eventId)
+            putExtra(NotificationActionReceiver.EXTRA_HABIT_ID, habitId)
+            putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+            putExtra(NotificationActionReceiver.EXTRA_ACTION, NotificationActionReceiver.ACTION_DENY)
+        }
+        val denyPendingIntent = PendingIntent.getBroadcast(
+            context,
+            (notificationId * 3 + 2),
+            denyIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID)
@@ -55,6 +99,21 @@ object NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                .addAction(
+                    android.R.drawable.ic_input_add,
+                    "Completed",
+                    completedPendingIntent
+                )
+                .addAction(
+                    android.R.drawable.ic_popup_reminder,
+                    "Snooze",
+                    snoozePendingIntent
+                )
+                .addAction(
+                    android.R.drawable.ic_delete,
+                    "Deny",
+                    denyPendingIntent
+                )
                 .build()
 
         val notificationManager = NotificationManagerCompat.from(context)
