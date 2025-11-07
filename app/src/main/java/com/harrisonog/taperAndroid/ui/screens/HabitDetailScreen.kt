@@ -81,14 +81,7 @@ fun HabitDetailScreen(
         }
 
         Column(Modifier.fillMaxSize().padding(pad)) {
-            Card(Modifier.padding(16.dp)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(habit.description ?: habit.message)
-                    Text("Plan: ${habit.startPerDay} → ${habit.endPerDay} per day over ${habit.weeks} weeks")
-                    Text(if (habit.isGoodHabit) "Type: Good (ramp up)" else "Type: Taper down")
-                    Text(if (habit.isActive) "Status: Active" else "Status: Paused")
-                }
-            }
+            HabitDetailHeader(habit)
 
             // Weekly Dashboard
             WeeklyResponseDashboard(
@@ -108,6 +101,18 @@ fun HabitDetailScreen(
                 isGoodHabit = habit.isGoodHabit,
                 modifier = Modifier.padding(16.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun HabitDetailHeader(habit: Habit) {
+    Card(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(habit.description ?: habit.message)
+            Text("Plan: ${habit.startPerDay} → ${habit.endPerDay} per day over ${habit.weeks} weeks")
+            Text(if (habit.isGoodHabit) "Type: Good (ramp up)" else "Type: Taper down")
+            Text(if (habit.isActive) "Status: Active" else "Status: Paused")
         }
     }
 }
