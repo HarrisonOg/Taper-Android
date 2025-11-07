@@ -23,7 +23,10 @@ fun HabitEditorScreen(
     var endPerDay by remember { mutableIntStateOf(0) }
     var weeks by remember { mutableIntStateOf(4) }
     var isGood by remember { mutableStateOf(false) } // default "taper down"
-    val canSave = name.isNotBlank() && weeks >= 1 && startPerDay >= 0 && endPerDay >= 0
+    var startPerDayError by remember { mutableStateOf(false) }
+    var endPerDayError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val canSave = name.isNotBlank() && weeks >= 1 && startPerDay >= 0 && endPerDay >= 0 && !startPerDayError && !endPerDayError
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("New Habit") }) },
@@ -71,14 +74,42 @@ fun HabitEditorScreen(
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                NumberField("Start/day", startPerDay, { startPerDay = it.coerceAtLeast(0) }, Modifier.weight(1f))
-                NumberField("End/day", endPerDay, { endPerDay = it.coerceAtLeast(0) }, Modifier.weight(1f))
+                NumberField(
+                    "Start/day",
+                    startPerDay,
+                    {
+                        startPerDay = it.coerceAtLeast(0)
+                        startPerDayError = false
+                        errorMessage = null
+                    },
+                    Modifier.weight(1f),
+                    isError = startPerDayError
+                )
+                NumberField(
+                    "End/day",
+                    endPerDay,
+                    {
+                        endPerDay = it.coerceAtLeast(0)
+                        endPerDayError = false
+                        errorMessage = null
+                    },
+                    Modifier.weight(1f),
+                    isError = endPerDayError
+                )
                 NumberField("Weeks", weeks, { weeks = it.coerceAtLeast(1) }, Modifier.weight(1f))
             }
 
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Checkbox(checked = isGood, onCheckedChange = { isGood = it })
                 Text("Good habit (ramp up). Unchecked = taper down.")
+            }
+
+            errorMessage?.let { msg ->
+                Text(
+                    text = msg,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             Spacer(Modifier.weight(1f))
@@ -88,6 +119,17 @@ fun HabitEditorScreen(
                 Button(
                     enabled = canSave,
                     onClick = {
+                        // Validate events per day before saving
+                        val startExceedsLimit = startPerDay > 15
+                        val endExceedsLimit = endPerDay > 15
+
+                        if (startExceedsLimit || endExceedsLimit) {
+                            startPerDayError = startExceedsLimit
+                            endPerDayError = endExceedsLimit
+                            errorMessage = "Cannot set more than 15 alarms per day"
+                            return@Button
+                        }
+
                         onSave(
                             HabitDraft(
                                 name,
@@ -114,6 +156,7 @@ private fun NumberField(
     value: Int,
     onChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    isError: Boolean = false,
 ) {
     var text by remember(value) { mutableStateOf(value.toString()) }
 
@@ -126,6 +169,7 @@ private fun NumberField(
         label = { Text(label) },
         singleLine = true,
         modifier = modifier,
+        isError = isError,
         trailingIcon = {
             if (text.isNotEmpty()) {
                 IconButton(onClick = { text = "" }) {
