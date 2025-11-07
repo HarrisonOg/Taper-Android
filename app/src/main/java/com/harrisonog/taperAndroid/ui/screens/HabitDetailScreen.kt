@@ -26,6 +26,7 @@ import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.WeekDay
 import com.kizitonwose.calendar.core.atStartOfMonth
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -89,66 +90,12 @@ fun HabitDetailScreen(
                 }
             }
 
-            // Response counters
-            val completedCount = state.events.count { it.responseType == "completed" }
-            val deniedCount = state.events.count { it.responseType == "denied" }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = completedCount.toString(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = "Completed",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = deniedCount.toString(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                        Text(
-                            text = "Denied",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
-                }
-            }
+            // Weekly Dashboard
+            WeeklyResponseDashboard(
+                events = state.events,
+                isGoodHabit = habit.isGoodHabit,
+                modifier = Modifier.padding(16.dp)
+            )
 
             Text(
                 "Planned notifications",
@@ -156,7 +103,224 @@ fun HabitDetailScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
 
-            PlannedNotificationsCalendar(events = state.events, modifier = Modifier.padding(16.dp))
+            PlannedNotificationsCalendar(
+                events = state.events,
+                isGoodHabit = habit.isGoodHabit,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeeklyResponseDashboard(
+    events: List<HabitEvent>,
+    isGoodHabit: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    // Get the current week's events (Monday to Sunday)
+    val now = LocalDate.now()
+    val startOfWeek = now.with(DayOfWeek.MONDAY)
+    val endOfWeek = startOfWeek.plusDays(6)
+
+    // Group events by date for the current week
+    val weekEvents = events.filter { event ->
+        val eventDate = event.scheduledAt.atZone(ZoneId.systemDefault()).toLocalDate()
+        !eventDate.isBefore(startOfWeek) && !eventDate.isAfter(endOfWeek)
+    }
+
+    val completedCount = weekEvents.count { it.responseType == "completed" }
+    val deniedCount = weekEvents.count { it.responseType == "denied" }
+
+    // Color scheme based on habit type
+    val completedColor = if (isGoodHabit) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.errorContainer
+    }
+    val completedOnColor = if (isGoodHabit) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onErrorContainer
+    }
+
+    val deniedColor = if (isGoodHabit) {
+        MaterialTheme.colorScheme.errorContainer
+    } else {
+        MaterialTheme.colorScheme.primaryContainer
+    }
+    val deniedOnColor = if (isGoodHabit) {
+        MaterialTheme.colorScheme.onErrorContainer
+    } else {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    }
+
+    Card(modifier = modifier) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "This Week",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            // Summary counters
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = completedColor
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = completedCount.toString(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = completedOnColor
+                        )
+                        Text(
+                            text = "Completed",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = completedOnColor
+                        )
+                    }
+                }
+
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = deniedColor
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = deniedCount.toString(),
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = deniedOnColor
+                        )
+                        Text(
+                            text = "Denied",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = deniedOnColor
+                        )
+                    }
+                }
+            }
+
+            // Daily breakdown
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                for (i in 0..6) {
+                    val date = startOfWeek.plusDays(i.toLong())
+                    val dayEvents = weekEvents.filter {
+                        it.scheduledAt.atZone(ZoneId.systemDefault()).toLocalDate() == date
+                    }
+                    val dayCompleted = dayEvents.count { it.responseType == "completed" }
+                    val dayDenied = dayEvents.count { it.responseType == "denied" }
+
+                    DayResponseRow(
+                        date = date,
+                        completedCount = dayCompleted,
+                        deniedCount = dayDenied,
+                        isGoodHabit = isGoodHabit
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayResponseRow(
+    date: LocalDate,
+    completedCount: Int,
+    deniedCount: Int,
+    isGoodHabit: Boolean,
+) {
+    val dayFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
+    val isToday = date == LocalDate.now()
+
+    // Color scheme based on habit type
+    val completedColor = if (isGoodHabit) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.error
+    }
+
+    val deniedColor = if (isGoodHabit) {
+        MaterialTheme.colorScheme.error
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (isToday) "Today" else date.format(dayFormatter),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.width(100.dp)
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Completed indicator
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(completedColor)
+                )
+                Text(
+                    text = completedCount.toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = completedColor
+                )
+            }
+
+            // Denied indicator
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(deniedColor)
+                )
+                Text(
+                    text = deniedCount.toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = deniedColor
+                )
+            }
         }
     }
 }
@@ -164,6 +328,7 @@ fun HabitDetailScreen(
 @Composable
 private fun PlannedNotificationsCalendar(
     events: List<HabitEvent>,
+    isGoodHabit: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val currentDate = remember { LocalDate.now() }
@@ -240,7 +405,7 @@ private fun PlannedNotificationsCalendar(
         } else {
             LazyColumn(Modifier.fillMaxSize()) {
                 items(filteredEvents) { ev ->
-                    EventRow(ev)
+                    EventRow(ev, isGoodHabit)
                     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
                 }
             }
@@ -323,7 +488,7 @@ private fun CalendarDay(
 }
 
 @Composable
-private fun EventRow(event: HabitEvent) {
+private fun EventRow(event: HabitEvent, isGoodHabit: Boolean) {
     val fmt = DateTimeFormatter.ofPattern("EEE, MMM d • h:mm a")
     val local = event.scheduledAt.atZone(ZoneId.systemDefault()).toLocalDateTime()
 
@@ -337,8 +502,12 @@ private fun EventRow(event: HabitEvent) {
     }
 
     val statusColor = when {
-        event.responseType == "completed" -> MaterialTheme.colorScheme.primary
-        event.responseType == "denied" -> MaterialTheme.colorScheme.error
+        event.responseType == "completed" -> {
+            if (isGoodHabit) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+        }
+        event.responseType == "denied" -> {
+            if (isGoodHabit) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        }
         event.responseType == "snoozed" -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
