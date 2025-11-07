@@ -7,7 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.material3.MaterialTheme
 import androidx.lifecycle.lifecycleScope
 import com.harrisonog.taperAndroid.notifications.NotificationHelper
 import com.harrisonog.taperAndroid.ui.navigation.TaperNavHost
@@ -48,6 +51,13 @@ class MainActivity : ComponentActivity() {
             val repository = (application as TaperApp).repository
 
             TaperAndroidTheme {
+                // Set window background to match theme
+                val backgroundColor = MaterialTheme.colorScheme.background
+                SideEffect {
+                    window.setBackgroundDrawableResource(android.R.color.transparent)
+                    window.decorView.setBackgroundColor(backgroundColor.toArgb())
+                }
+
                 TaperNavHost(
                     repository = repository,
                     modifier = Modifier.fillMaxSize(),
