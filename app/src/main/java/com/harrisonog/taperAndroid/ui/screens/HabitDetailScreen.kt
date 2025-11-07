@@ -90,17 +90,7 @@ fun HabitDetailScreen(
                 modifier = Modifier.padding(16.dp)
             )
 
-            Text(
-                "Planned notifications",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-
-            PlannedNotificationsCalendar(
-                events = state.events,
-                isGoodHabit = habit.isGoodHabit,
-                modifier = Modifier.padding(16.dp)
-            )
+            HabitPlannedNotificationsSection(state, habit)
         }
     }
 }
@@ -115,6 +105,24 @@ private fun HabitDetailHeader(habit: Habit) {
             Text(if (habit.isActive) "Status: Active" else "Status: Paused")
         }
     }
+}
+
+@Composable
+private fun HabitPlannedNotificationsSection(
+    state: HabitDetailState,
+    habit: Habit,
+) {
+    Text(
+        "Planned notifications",
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(horizontal = 16.dp),
+    )
+
+    PlannedNotificationsCalendar(
+        events = state.events,
+        isGoodHabit = habit.isGoodHabit,
+        modifier = Modifier.padding(16.dp)
+    )
 }
 
 @Composable
