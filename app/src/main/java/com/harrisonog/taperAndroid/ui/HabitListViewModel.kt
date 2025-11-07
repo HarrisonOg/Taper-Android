@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalTime
 
 class HabitListViewModel(private val repo: TaperRepository) : ViewModel() {
     val uiState =
@@ -19,6 +20,12 @@ class HabitListViewModel(private val repo: TaperRepository) : ViewModel() {
     fun deleteHabit(habit: Habit): Job =
         viewModelScope.launch {
             repo.deleteHabit(habit)
+        }
+
+    fun updateSettings(wakeStart: LocalTime, wakeEnd: LocalTime, onDone: () -> Unit) =
+        viewModelScope.launch {
+            repo.updateSettingsAndReschedule(wakeStart, wakeEnd)
+            onDone()
         }
 }
 
