@@ -23,6 +23,8 @@ interface TaperRepository {
 
     fun observeEvents(habitId: Long): Flow<List<HabitEvent>>
 
+    fun observeAllEvents(): Flow<List<HabitEvent>>
+
     fun observeSettings(): Flow<AppSettings>
 
     suspend fun upsertSettings(
@@ -65,6 +67,8 @@ class DefaultTaperRepository(
     override fun observeHabit(id: Long) = habitDao.observe(id)
 
     override fun observeEvents(habitId: Long) = eventDao.observeForHabit(habitId)
+
+    override fun observeAllEvents() = eventDao.observeAll()
 
     // DataStore-backed settings
     override fun observeSettings(): Flow<AppSettings> = context.observeSettings()
