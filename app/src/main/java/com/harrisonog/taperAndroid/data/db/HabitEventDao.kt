@@ -17,6 +17,9 @@ interface HabitEventDao {
     @Query("SELECT * FROM habit_events")
     suspend fun getAll(): List<HabitEvent>
 
+    @Query("SELECT * FROM habit_events")
+    fun observeAll(): Flow<List<HabitEvent>>
+
     @Query("DELETE FROM habit_events WHERE habitId = :habitId")
     suspend fun deleteForHabit(habitId: Long)
 

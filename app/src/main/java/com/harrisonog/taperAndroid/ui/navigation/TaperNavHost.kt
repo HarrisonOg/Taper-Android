@@ -41,9 +41,11 @@ fun TaperNavHost(
                     factory = habitListViewModelFactory(repository),
                 )
             val state by viewModel.uiState.collectAsState()
+            val dashboardStats by viewModel.dashboardState.collectAsState()
 
             HabitListScreen(
                 state = state,
+                dashboardStats = dashboardStats,
                 onAdd = { navController.navigate(HabitEditorRoute) },
                 onOpen = { habitId -> navController.navigate("$HabitDetailRoute/$habitId") },
                 onDelete = { habit -> viewModel.deleteHabit(habit) },
