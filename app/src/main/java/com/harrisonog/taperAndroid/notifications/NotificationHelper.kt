@@ -91,6 +91,20 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Create delete intent - triggers deny action when notification is dismissed/swiped away
+        val deleteIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            putExtra(NotificationActionReceiver.EXTRA_EVENT_ID, eventId)
+            putExtra(NotificationActionReceiver.EXTRA_HABIT_ID, habitId)
+            putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+            putExtra(NotificationActionReceiver.EXTRA_ACTION, NotificationActionReceiver.ACTION_DENY)
+        }
+        val deletePendingIntent = PendingIntent.getBroadcast(
+            context,
+            (notificationId * 3 + 3),
+            deleteIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info) // TODO: Replace with custom icon
@@ -99,6 +113,7 @@ object NotificationHelper {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                .setDeleteIntent(deletePendingIntent) // Trigger deny action when notification is dismissed
                 .addAction(
                     android.R.drawable.ic_input_add,
                     "Completed",
