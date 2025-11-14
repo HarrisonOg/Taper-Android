@@ -10,6 +10,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -47,7 +49,7 @@ fun HabitDetailScreen(
     val habit = state.habit
     val pagerState = rememberPagerState(
         initialPage = 0,
-        pageCount = { 3 }
+        pageCount = { 4 }
     )
 
     Scaffold(
@@ -88,8 +90,6 @@ fun HabitDetailScreen(
         }
 
         Column(Modifier.fillMaxSize().padding(pad)) {
-            HabitDetailHeader(habit)
-
             // Page indicators
             Row(
                 modifier = Modifier
@@ -98,7 +98,7 @@ fun HabitDetailScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                repeat(3) { page ->
+                repeat(4) { page ->
                     Box(
                         modifier = Modifier
                             .padding(horizontal = 4.dp)
@@ -122,6 +122,14 @@ fun HabitDetailScreen(
             ) { page ->
                 when (page) {
                     0 -> {
+                        // Habit Dashboard page (new)
+                        HabitDashboard(
+                            habit = habit,
+                            events = state.events,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    1 -> {
                         // Weekly Dashboard page
                         Column(Modifier.fillMaxSize()) {
                             WeeklyResponseDashboard(
@@ -131,13 +139,13 @@ fun HabitDetailScreen(
                             )
                         }
                     }
-                    1 -> {
+                    2 -> {
                         // Planned Notifications page
                         Column(Modifier.fillMaxSize()) {
                             HabitPlannedNotificationsSection(state, habit)
                         }
                     }
-                    2 -> {
+                    3 -> {
                         // Total Statistics page
                         Column(Modifier.fillMaxSize()) {
                             HabitStatisticsPage(
@@ -897,4 +905,249 @@ private fun EventRow(event: HabitEvent, isGoodHabit: Boolean) {
             )
         },
     )
+}
+
+@Composable
+private fun HabitDashboard(
+    habit: Habit,
+    events: List<HabitEvent>,
+    modifier: Modifier = Modifier,
+) {
+    val today = LocalDate.now()
+    val todayStart = today.atStartOfDay(ZoneId.systemDefault()).toInstant()
+    val todayEnd = today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
+
+    // Get today's events
+    val todayEvents = events.filter { event ->
+        event.scheduledAt in todayStart..<todayEnd
+    }
+
+    val completedToday = todayEvents.count { it.responseType == "completed" }
+    val totalToday = todayEvents.size
+
+    // Calculate current week
+    val startDate = habit.startDate
+    val currentDay = java.time.temporal.ChronoUnit.DAYS.between(startDate, today).toInt() + 1
+    val currentWeek = ((currentDay - 1) / 7) + 1
+    val totalWeeks = habit.weeks
+
+    // Find next alarm
+    val now = java.time.Instant.now()
+    val upcomingEvents = events.filter { event ->
+        event.scheduledAt > now && event.responseType == null
+    }.sortedBy { it.scheduledAt }
+    val nextAlarm = upcomingEvents.firstOrNull()
+
+    LazyColumn(
+        modifier = modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Habit name and type icon
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val habitMessage = "Message: ${habit.message}"
+                    // Icon
+                    Icon(
+                        imageVector = if (habit.isGoodHabit) {
+                            Icons.Filled.ArrowUpward
+                        } else {
+                            Icons.Filled.ArrowDownward
+                        },
+                        contentDescription = if (habit.isGoodHabit) "Ramp up habit" else "Taper down habit",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(12.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+
+                    // Habit name and type
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = habit.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = habitMessage,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Today's progress
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Today's Progress",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "$completedToday / $totalToday completed",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (totalToday > 0) {
+                                "${(completedToday.toFloat() / totalToday.toFloat() * 100).toInt()}%"
+                            } else {
+                                "0%"
+                            },
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    LinearProgressIndicator(
+                        progress = { if (totalToday > 0) completedToday.toFloat() / totalToday.toFloat() else 0f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(12.dp)
+                            .clip(MaterialTheme.shapes.small),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+                }
+            }
+        }
+
+        // Current phase indicator
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Current Phase",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Week $currentWeek of $totalWeeks",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    LinearProgressIndicator(
+                        progress = { currentWeek.toFloat() / totalWeeks.toFloat() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(MaterialTheme.shapes.small),
+                        color = MaterialTheme.colorScheme.tertiary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
+
+                    Text(
+                        text = "${totalWeeks - currentWeek} ${if (totalWeeks - currentWeek == 1) "week" else "weeks"} remaining",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        }
+
+        // Next alarm
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (nextAlarm != null) {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    }
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Next Alarm",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (nextAlarm != null) {
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+
+                    if (nextAlarm != null) {
+                        val nextAlarmTime = nextAlarm.scheduledAt
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
+                        val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d 'at' h:mm a")
+
+                        Text(
+                            text = nextAlarmTime.format(formatter),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+
+                        // Time until next alarm
+                        val duration = java.time.Duration.between(now, nextAlarm.scheduledAt)
+                        val hours = duration.toHours()
+                        val minutes = duration.toMinutes() % 60
+
+                        Text(
+                            text = when {
+                                hours < 1 -> "in $minutes ${if (minutes == 1L) "minute" else "minutes"}"
+                                hours < 24 -> "in $hours ${if (hours == 1L) "hour" else "hours"}"
+                                else -> {
+                                    val days = hours / 24
+                                    "in $days ${if (days == 1L) "day" else "days"}"
+                                }
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                    } else {
+                        Text(
+                            text = "No upcoming alarms",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
