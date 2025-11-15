@@ -327,18 +327,31 @@ private fun EnhancedHabitListItem(
             }
 
             // Today's progress
-            Column(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Text(
+                    text = "Today: ${habitWithStats.completedToday}/${habitWithStats.totalToday} completed",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Text(
-                        text = "Today: ${habitWithStats.completedToday}/${habitWithStats.totalToday} completed",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    androidx.compose.material3.CircularProgressIndicator(
+                        progress = {
+                            if (habitWithStats.totalToday > 0)
+                                habitWithStats.completedToday.toFloat() / habitWithStats.totalToday.toFloat()
+                            else 0f
+                        },
+                        modifier = Modifier.size(48.dp),
+                        color = habitPrimary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        strokeWidth = 4.dp
                     )
                     Text(
                         text = if (habitWithStats.totalToday > 0) {
@@ -346,24 +359,10 @@ private fun EnhancedHabitListItem(
                         } else {
                             "0%"
                         },
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = habitPrimary
                     )
                 }
-
-                LinearProgressIndicator(
-                    progress = {
-                        if (habitWithStats.totalToday > 0)
-                            habitWithStats.completedToday.toFloat() / habitWithStats.totalToday.toFloat()
-                        else 0f
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(MaterialTheme.shapes.small),
-                    color = habitPrimary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
             }
 
             // Phase and Next Alarm

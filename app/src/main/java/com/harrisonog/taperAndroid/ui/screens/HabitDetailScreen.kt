@@ -1041,26 +1041,29 @@ private fun HabitDashboard(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        Text(
-                            text = if (totalToday > 0) {
-                                "${(completedToday.toFloat() / totalToday.toFloat() * 100).toInt()}%"
-                            } else {
-                                "0%"
-                            },
-                            style = MaterialTheme.typography.titleLarge,
-                            color = habitPrimary
-                        )
-                    }
 
-                    LinearProgressIndicator(
-                        progress = { if (totalToday > 0) completedToday.toFloat() / totalToday.toFloat() else 0f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(12.dp)
-                            .clip(MaterialTheme.shapes.small),
-                        color = habitPrimary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.size(80.dp)
+                        ) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                progress = { if (totalToday > 0) completedToday.toFloat() / totalToday.toFloat() else 0f },
+                                modifier = Modifier.size(80.dp),
+                                color = habitPrimary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                strokeWidth = 6.dp
+                            )
+                            Text(
+                                text = if (totalToday > 0) {
+                                    "${(completedToday.toFloat() / totalToday.toFloat() * 100).toInt()}%"
+                                } else {
+                                    "0%"
+                                },
+                                style = MaterialTheme.typography.titleLarge,
+                                color = habitPrimary
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1084,28 +1087,39 @@ private fun HabitDashboard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Week $currentWeek of $totalWeeks",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = habitPrimary
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Week $currentWeek of $totalWeeks",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = habitPrimary
+                            )
+                            Text(
+                                text = "${totalWeeks - currentWeek} ${if (totalWeeks - currentWeek == 1) "week" else "weeks"} remaining",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.size(80.dp)
+                        ) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                progress = { currentWeek.toFloat() / totalWeeks.toFloat() },
+                                modifier = Modifier.size(80.dp),
+                                color = habitPrimary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                strokeWidth = 6.dp
+                            )
+                            Text(
+                                text = "${(currentWeek.toFloat() / totalWeeks.toFloat() * 100).toInt()}%",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = habitPrimary
+                            )
+                        }
                     }
-
-                    LinearProgressIndicator(
-                        progress = { currentWeek.toFloat() / totalWeeks.toFloat() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(MaterialTheme.shapes.small),
-                        color = habitPrimary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )
-
-                    Text(
-                        text = "${totalWeeks - currentWeek} ${if (totalWeeks - currentWeek == 1) "week" else "weeks"} remaining",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
                 }
             }
         }
