@@ -4,19 +4,31 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.harrisonog.taperAndroid.data.TaperRepository
 import com.harrisonog.taperAndroid.data.db.Habit
+import com.harrisonog.taperAndroid.data.db.HabitEvent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 
 class HabitListViewModel(private val repo: TaperRepository) : ViewModel() {
     val uiState =
-        repo.observeHabits()
-            .map { HabitListState(items = it) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), HabitListState())
+        combine(
+            repo.observeHabits(),
+            repo.observeAllEvents()
+        ) { habits, events ->
+            val habitsWithStats = habits.map { habit ->
+                val habitEvents = events.filter { it.habitId == habit.id }
+                computeHabitStats(habit, habitEvents)
+            }
+            HabitListState(items = habitsWithStats)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), HabitListState())
 
     val dashboardState =
         repo.observeAllEvents()
@@ -40,13 +52,57 @@ class HabitListViewModel(private val repo: TaperRepository) : ViewModel() {
         }
 }
 
-data class HabitListState(val items: List<Habit> = emptyList())
+data class HabitListState(val items: List<HabitWithStats> = emptyList())
+
+data class HabitWithStats(
+    val habit: Habit,
+    val completedToday: Int,
+    val totalToday: Int,
+    val currentWeek: Int,
+    val totalWeeks: Int,
+    val nextAlarmTime: Instant?
+)
 
 data class DashboardStats(
     val totalAlarmsToday: Int = 0,
     val completedToday: Int = 0,
     val habitStreaks: Map<Long, Int> = emptyMap()
 )
+
+private fun computeHabitStats(habit: Habit, events: List<HabitEvent>): HabitWithStats {
+    val today = LocalDate.now()
+    val todayStart = today.atStartOfDay(ZoneId.systemDefault()).toInstant()
+    val todayEnd = today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
+
+    // Get today's events
+    val todayEvents = events.filter { event ->
+        event.scheduledAt >= todayStart && event.scheduledAt < todayEnd
+    }
+
+    val completedToday = todayEvents.count { it.responseType == "completed" }
+    val totalToday = todayEvents.size
+
+    // Calculate current week
+    val startDate = habit.startDate
+    val currentDay = java.time.temporal.ChronoUnit.DAYS.between(startDate, today).toInt() + 1
+    val currentWeek = ((currentDay - 1) / 7) + 1
+
+    // Find next alarm
+    val now = Instant.now()
+    val upcomingEvents = events.filter { event ->
+        event.scheduledAt > now && event.responseType == null
+    }.sortedBy { it.scheduledAt }
+    val nextAlarm = upcomingEvents.firstOrNull()
+
+    return HabitWithStats(
+        habit = habit,
+        completedToday = completedToday,
+        totalToday = totalToday,
+        currentWeek = currentWeek,
+        totalWeeks = habit.weeks,
+        nextAlarmTime = nextAlarm?.scheduledAt
+    )
+}
 
 private fun computeDashboardStatsSync(events: List<com.harrisonog.taperAndroid.data.db.HabitEvent>, habits: List<Habit>): DashboardStats {
     val today = java.time.LocalDate.now()
