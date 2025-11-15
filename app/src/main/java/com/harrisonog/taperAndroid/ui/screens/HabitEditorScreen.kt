@@ -1,6 +1,7 @@
 package com.harrisonog.taperAndroid.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
@@ -8,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.harrisonog.taperAndroid.data.db.Habit
+import com.harrisonog.taperAndroid.ui.theme.GoodHabitPrimary
+import com.harrisonog.taperAndroid.ui.theme.TaperHabitPrimary
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,9 +102,26 @@ fun HabitEditorScreen(
                 NumberField("Weeks", weeks, { weeks = it.coerceAtLeast(1) }, Modifier.weight(1f))
             }
 
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Checkbox(checked = isGood, onCheckedChange = { isGood = it })
-                Text("Good habit (ramp up). Unchecked = taper down.")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Taper habit",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (!isGood) TaperHabitPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Switch(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    checked = isGood,
+                    onCheckedChange = { isGood = it }
+                )
+                Text(
+                    text = "Good habit",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isGood) GoodHabitPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             errorMessage?.let { msg ->
