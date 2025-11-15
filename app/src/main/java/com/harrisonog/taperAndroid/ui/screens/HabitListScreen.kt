@@ -342,6 +342,15 @@ private fun EnhancedHabitListItem(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.size(48.dp)
                 ) {
+                    // Background circle (outline)
+                    androidx.compose.material3.CircularProgressIndicator(
+                        progress = { 1f },
+                        modifier = Modifier.size(48.dp),
+                        color = habitPrimary.copy(alpha = 0.2f),
+                        strokeWidth = 4.dp,
+                        trackColor = androidx.compose.ui.graphics.Color.Transparent
+                    )
+                    // Progress circle
                     androidx.compose.material3.CircularProgressIndicator(
                         progress = {
                             if (habitWithStats.totalToday > 0)
@@ -350,7 +359,7 @@ private fun EnhancedHabitListItem(
                         },
                         modifier = Modifier.size(48.dp),
                         color = habitPrimary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        trackColor = androidx.compose.ui.graphics.Color.Transparent,
                         strokeWidth = 4.dp
                     )
                     Text(
