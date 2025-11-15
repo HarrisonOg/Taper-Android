@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,7 +23,10 @@ import androidx.compose.ui.unit.dp
 import com.harrisonog.taperAndroid.data.db.Habit
 import com.harrisonog.taperAndroid.ui.DashboardStats
 import com.harrisonog.taperAndroid.ui.HabitListState
+import com.harrisonog.taperAndroid.ui.HabitWithStats
 import com.harrisonog.taperAndroid.ui.permissions.PermissionChecker
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +64,7 @@ fun HabitListScreen(
                 // Show daily dashboard
                 DailyDashboard(
                     dashboardStats = dashboardStats,
-                    habits = state.items,
+                    habits = state.items.map { it.habit },
                 )
 
                 if (state.items.isEmpty()) {
@@ -68,27 +73,10 @@ fun HabitListScreen(
                     }
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
-                        items(state.items, key = { it.id }) { habit ->
-                            ListItem(
-                                headlineContent = {
-                                    Text(habit.name + if (!habit.isActive) " (paused)" else "")
-                                },
-                                supportingContent = {
-                                    Text(
-                                        (habit.description ?: habit.message),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                },
-                                trailingContent = {
-                                    Text("${habit.startPerDay}→${habit.endPerDay} / ${habit.weeks}w")
-                                },
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .background(MaterialTheme.colorScheme.surface)
-                                        .clickable { onOpen(habit.id) }
-                                        .padding(horizontal = 8.dp),
+                        items(state.items, key = { it.habit.id }) { habitWithStats ->
+                            EnhancedHabitListItem(
+                                habitWithStats = habitWithStats,
+                                onClick = { onOpen(habitWithStats.habit.id) }
                             )
                             HorizontalDivider()
                         }
@@ -258,6 +246,149 @@ private fun StreakRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
+        }
+    }
+}
+
+@Composable
+private fun EnhancedHabitListItem(
+    habitWithStats: HabitWithStats,
+    onClick: () -> Unit,
+) {
+    val habit = habitWithStats.habit
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header: Habit name and icon
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Icon
+                Icon(
+                    imageVector = if (habit.isGoodHabit) {
+                        Icons.Filled.ArrowUpward
+                    } else {
+                        Icons.Filled.ArrowDownward
+                    },
+                    contentDescription = if (habit.isGoodHabit) "Building habit" else "Reducing habit",
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(6.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                // Habit name
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = habit.name + if (!habit.isActive) " (paused)" else "",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            // Today's progress
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Today: ${habitWithStats.completedToday}/${habitWithStats.totalToday} completed",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (habitWithStats.totalToday > 0) {
+                            "${(habitWithStats.completedToday.toFloat() / habitWithStats.totalToday.toFloat() * 100).toInt()}%"
+                        } else {
+                            "0%"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                LinearProgressIndicator(
+                    progress = {
+                        if (habitWithStats.totalToday > 0)
+                            habitWithStats.completedToday.toFloat() / habitWithStats.totalToday.toFloat()
+                        else 0f
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(MaterialTheme.shapes.small),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+            }
+
+            // Phase and Next Alarm
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Current phase
+                Text(
+                    text = "Week ${habitWithStats.currentWeek} of ${habitWithStats.totalWeeks}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // Next alarm
+                if (habitWithStats.nextAlarmTime != null) {
+                    val nextAlarmTime = habitWithStats.nextAlarmTime
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime()
+                    val now = java.time.Instant.now()
+                    val duration = java.time.Duration.between(now, habitWithStats.nextAlarmTime)
+                    val hours = duration.toHours()
+
+                    val timeText = when {
+                        hours < 1 -> {
+                            val minutes = duration.toMinutes()
+                            "${minutes}m"
+                        }
+                        hours < 24 -> "${hours}h"
+                        else -> {
+                            val days = hours / 24
+                            "${days}d"
+                        }
+                    }
+
+                    Text(
+                        text = "Next: $timeText",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                } else {
+                    Text(
+                        text = "No upcoming",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+            }
         }
     }
 }
