@@ -25,6 +25,12 @@ import com.harrisonog.taperAndroid.ui.DashboardStats
 import com.harrisonog.taperAndroid.ui.HabitListState
 import com.harrisonog.taperAndroid.ui.HabitWithStats
 import com.harrisonog.taperAndroid.ui.permissions.PermissionChecker
+import com.harrisonog.taperAndroid.ui.theme.GoodHabitContainer
+import com.harrisonog.taperAndroid.ui.theme.GoodHabitOnContainer
+import com.harrisonog.taperAndroid.ui.theme.GoodHabitPrimary
+import com.harrisonog.taperAndroid.ui.theme.TaperHabitContainer
+import com.harrisonog.taperAndroid.ui.theme.TaperHabitOnContainer
+import com.harrisonog.taperAndroid.ui.theme.TaperHabitPrimary
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -257,6 +263,11 @@ private fun EnhancedHabitListItem(
 ) {
     val habit = habitWithStats.habit
 
+    // Habit-specific colors
+    val habitPrimary = if (habit.isGoodHabit) GoodHabitPrimary else TaperHabitPrimary
+    val habitContainer = if (habit.isGoodHabit) GoodHabitContainer else TaperHabitContainer
+    val habitOnContainer = if (habit.isGoodHabit) GoodHabitOnContainer else TaperHabitOnContainer
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -287,9 +298,9 @@ private fun EnhancedHabitListItem(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(habitContainer)
                         .padding(6.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    tint = habitOnContainer
                 )
 
                 // Habit name
@@ -323,7 +334,7 @@ private fun EnhancedHabitListItem(
                             "0%"
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = habitPrimary
                     )
                 }
 
@@ -337,7 +348,7 @@ private fun EnhancedHabitListItem(
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(MaterialTheme.shapes.small),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = habitPrimary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
             }

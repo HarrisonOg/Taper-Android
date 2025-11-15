@@ -26,6 +26,12 @@ import androidx.compose.ui.unit.dp
 import com.harrisonog.taperAndroid.data.db.Habit
 import com.harrisonog.taperAndroid.data.db.HabitEvent
 import com.harrisonog.taperAndroid.ui.HabitDetailState
+import com.harrisonog.taperAndroid.ui.theme.GoodHabitContainer
+import com.harrisonog.taperAndroid.ui.theme.GoodHabitOnContainer
+import com.harrisonog.taperAndroid.ui.theme.GoodHabitPrimary
+import com.harrisonog.taperAndroid.ui.theme.TaperHabitContainer
+import com.harrisonog.taperAndroid.ui.theme.TaperHabitOnContainer
+import com.harrisonog.taperAndroid.ui.theme.TaperHabitPrimary
 import com.kizitonwose.calendar.compose.WeekCalendar
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.WeekDay
@@ -944,6 +950,11 @@ private fun HabitDashboard(
     }.sortedBy { it.scheduledAt }
     val nextAlarm = upcomingEvents.firstOrNull()
 
+    // Habit-specific colors
+    val habitPrimary = if (habit.isGoodHabit) GoodHabitPrimary else TaperHabitPrimary
+    val habitContainer = if (habit.isGoodHabit) GoodHabitContainer else TaperHabitContainer
+    val habitOnContainer = if (habit.isGoodHabit) GoodHabitOnContainer else TaperHabitOnContainer
+
     LazyColumn(
         modifier = modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -975,9 +986,9 @@ private fun HabitDashboard(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(habitPrimary)
                             .padding(12.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary
+                        tint = androidx.compose.ui.graphics.Color.White
                     )
 
                     // Habit name and type
@@ -1028,7 +1039,7 @@ private fun HabitDashboard(
                                 "0%"
                             },
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
+                            color = habitPrimary
                         )
                     }
 
@@ -1038,7 +1049,7 @@ private fun HabitDashboard(
                             .fillMaxWidth()
                             .height(12.dp)
                             .clip(MaterialTheme.shapes.small),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = habitPrimary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
                 }
@@ -1067,7 +1078,7 @@ private fun HabitDashboard(
                         Text(
                             text = "Week $currentWeek of $totalWeeks",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = habitPrimary
                         )
                     }
 
@@ -1077,7 +1088,7 @@ private fun HabitDashboard(
                             .fillMaxWidth()
                             .height(8.dp)
                             .clip(MaterialTheme.shapes.small),
-                        color = MaterialTheme.colorScheme.tertiary,
+                        color = habitPrimary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
 
