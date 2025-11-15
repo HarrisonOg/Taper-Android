@@ -247,11 +247,8 @@ private fun HabitStatisticsPage(
     // Calculate success rate
     val totalResponded = completedCount + deniedCount
     val successRate = if (totalResponded > 0) {
-        if (habit.isGoodHabit) {
-            (completedCount.toFloat() / totalResponded.toFloat()) * 100
-        } else {
-            (deniedCount.toFloat() / totalResponded.toFloat()) * 100
-        }
+        // For both good habits and taper habits, use completed count
+        (completedCount.toFloat() / totalResponded.toFloat()) * 100
     } else {
         0f
     }
@@ -386,11 +383,7 @@ private fun HabitStatisticsPage(
                         }
                     )
                     Text(
-                        text = if (habit.isGoodHabit) {
-                            "Completed / Total Responses"
-                        } else {
-                            "Denied / Total Responses"
-                        },
+                        text = "Completed / Total Responses",
                         style = MaterialTheme.typography.bodySmall,
                         color = if (successRate >= 70) {
                             MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
