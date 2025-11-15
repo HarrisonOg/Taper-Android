@@ -3,7 +3,18 @@ package com.harrisonog.taperAndroid.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -11,13 +22,28 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,11 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.harrisonog.taperAndroid.data.db.Habit
 import com.harrisonog.taperAndroid.data.db.HabitEvent
 import com.harrisonog.taperAndroid.ui.HabitDetailState
-import com.harrisonog.taperAndroid.ui.theme.GoodHabitContainer
-import com.harrisonog.taperAndroid.ui.theme.GoodHabitOnContainer
 import com.harrisonog.taperAndroid.ui.theme.GoodHabitPrimary
-import com.harrisonog.taperAndroid.ui.theme.TaperHabitContainer
-import com.harrisonog.taperAndroid.ui.theme.TaperHabitOnContainer
 import com.harrisonog.taperAndroid.ui.theme.TaperHabitPrimary
 import com.kizitonwose.calendar.compose.WeekCalendar
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
@@ -169,18 +191,6 @@ fun HabitDetailScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun HabitDetailHeader(habit: Habit) {
-    Card(Modifier.padding(16.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(habit.description ?: habit.message)
-            Text("Plan: ${habit.startPerDay} → ${habit.endPerDay} per day over ${habit.weeks} weeks")
-            Text(if (habit.isGoodHabit) "Type: Good (ramp up)" else "Type: Taper down")
-            Text(if (habit.isActive) "Status: Active" else "Status: Paused")
         }
     }
 }
@@ -355,8 +365,9 @@ private fun HabitStatisticsPage(
                             MaterialTheme.colorScheme.onErrorContainer
                         }
                     )
+                    val successRateString = String.format(Locale.getDefault(),"%.1f%%", successRate)
                     Text(
-                        text = String.format("%.1f%%", successRate),
+                        text = successRateString,
                         style = MaterialTheme.typography.displayMedium,
                         color = if (successRate >= 70) {
                             MaterialTheme.colorScheme.onPrimaryContainer
@@ -897,14 +908,14 @@ private fun EventRow(event: HabitEvent, isGoodHabit: Boolean) {
         else -> "Scheduled"
     }
 
-    val statusColor = when {
-        event.responseType == "completed" -> {
+    val statusColor = when (event.responseType) {
+        "completed" -> {
             if (isGoodHabit) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
         }
-        event.responseType == "denied" -> {
+        "denied" -> {
             if (isGoodHabit) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         }
-        event.responseType == "snoozed" -> MaterialTheme.colorScheme.tertiary
+        "snoozed" -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
@@ -952,12 +963,10 @@ private fun HabitDashboard(
 
     // Habit-specific colors
     val habitPrimary = if (habit.isGoodHabit) GoodHabitPrimary else TaperHabitPrimary
-    val habitContainer = if (habit.isGoodHabit) GoodHabitContainer else TaperHabitContainer
-    val habitOnContainer = if (habit.isGoodHabit) GoodHabitOnContainer else TaperHabitOnContainer
 
     LazyColumn(
         modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         // Habit name and type icon
         item {

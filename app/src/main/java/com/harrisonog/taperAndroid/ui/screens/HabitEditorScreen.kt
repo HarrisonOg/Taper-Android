@@ -208,7 +208,7 @@ data class HabitDraft(
     val endPerDay: Int,
     val weeks: Int,
     val isGoodHabit: Boolean,
-    val startDate: java.time.LocalDate,
+    val startDate: LocalDate,
 )
 
 // Helper to pass draft back into VM create()
