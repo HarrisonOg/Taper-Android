@@ -77,7 +77,11 @@ fun HabitDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { },
+                title = {
+                    if (habit != null) {
+                        Text(habit.name)
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -88,6 +92,15 @@ fun HabitDetailScreen(
                 },
                 actions = {
                     IconButton(
+                        onClick = { habit?.let(onEdit) },
+                        enabled = habit != null,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit habit",
+                        )
+                    }
+                    IconButton(
                         onClick = { habit?.let(onDelete) },
                         enabled = habit != null,
                     ) {
@@ -97,6 +110,12 @@ fun HabitDetailScreen(
                         )
                     }
                 },
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         },
     ) { pad ->
@@ -107,7 +126,44 @@ fun HabitDetailScreen(
             return@Scaffold
         }
 
+        val habitPrimary = if (habit.isGoodHabit) GoodHabitPrimary else TaperHabitPrimary
+
         Column(Modifier.fillMaxSize().padding(pad)) {
+            // Header Section
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Habit type indicator icon
+                Icon(
+                    imageVector = if (habit.isGoodHabit) {
+                        Icons.Filled.ArrowUpward
+                    } else {
+                        Icons.Filled.ArrowDownward
+                    },
+                    contentDescription = if (habit.isGoodHabit) "Good habit" else "Taper habit",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(habitPrimary)
+                        .padding(12.dp),
+                    tint = androidx.compose.ui.graphics.Color.White
+                )
+
+                // Habit description
+                if (habit.description != null) {
+                    Text(
+                        text = habit.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+
             // Tab strip
             SecondaryTabRow(
                 selectedTabIndex = pagerState.currentPage,
@@ -144,7 +200,6 @@ fun HabitDetailScreen(
                         HabitDashboard(
                             habit = habit,
                             events = state.events,
-                            onEdit = onEdit,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -474,7 +529,6 @@ private fun StatisticRow(
 private fun HabitDashboard(
     habit: Habit,
     events: List<HabitEvent>,
-    onEdit: (Habit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val today = LocalDate.now()
@@ -506,66 +560,7 @@ private fun HabitDashboard(
         modifier = modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 1. Header Section
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Habit type indicator icon
-                    Icon(
-                        imageVector = if (habit.isGoodHabit) {
-                            Icons.Filled.ArrowUpward
-                        } else {
-                            Icons.Filled.ArrowDownward
-                        },
-                        contentDescription = if (habit.isGoodHabit) "Good habit" else "Taper habit",
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(habitPrimary)
-                            .padding(12.dp),
-                        tint = androidx.compose.ui.graphics.Color.White
-                    )
-
-                    // Habit name and description
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = habit.name,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        if (habit.description != null) {
-                            Text(
-                                text = habit.description,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                            )
-                        }
-                    }
-
-                    // Edit button
-                    IconButton(onClick = { onEdit(habit) }) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = "Edit habit",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-            }
-        }
-
-        // 2. Progress Overview Card
+        // 1. Progress Overview Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth()
