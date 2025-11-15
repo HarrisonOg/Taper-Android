@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.harrisonog.taperAndroid.data.db.Habit
 import com.harrisonog.taperAndroid.data.db.HabitEvent
@@ -623,11 +624,20 @@ private fun HabitDashboard(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.size(100.dp)
                             ) {
+                                // Background circle (outline)
+                                androidx.compose.material3.CircularProgressIndicator(
+                                    progress = { 1f },
+                                    modifier = Modifier.size(100.dp),
+                                    color = habitPrimary.copy(alpha = 0.2f),
+                                    strokeWidth = 8.dp,
+                                    trackColor = Color.Transparent
+                                )
+                                // Progress circle
                                 androidx.compose.material3.CircularProgressIndicator(
                                     progress = { if (totalToday > 0) confirmedToday.toFloat() / totalToday.toFloat() else 0f },
                                     modifier = Modifier.size(100.dp),
                                     color = habitPrimary,
-                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    trackColor = Color.Transparent,
                                     strokeWidth = 8.dp
                                 )
                                 Column(
@@ -656,11 +666,20 @@ private fun HabitDashboard(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.size(100.dp)
                             ) {
+                                // Background circle (outline)
+                                androidx.compose.material3.CircularProgressIndicator(
+                                    progress = { 1f },
+                                    modifier = Modifier.size(100.dp),
+                                    color = habitPrimary.copy(alpha = 0.2f),
+                                    strokeWidth = 8.dp,
+                                    trackColor = Color.Transparent
+                                )
+                                // Progress circle
                                 androidx.compose.material3.CircularProgressIndicator(
                                     progress = { currentDay.toFloat() / totalDays.toFloat() },
                                     modifier = Modifier.size(100.dp),
                                     color = habitPrimary,
-                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    trackColor = Color.Transparent,
                                     strokeWidth = 8.dp
                                 )
                                 Text(
