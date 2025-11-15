@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import com.harrisonog.taperAndroid.data.db.Habit
 import com.harrisonog.taperAndroid.data.db.HabitEvent
 import com.harrisonog.taperAndroid.ui.HabitDetailState
+import com.harrisonog.taperAndroid.ui.components.TaperProgressGraph
 import com.harrisonog.taperAndroid.ui.theme.GoodHabitPrimary
 import com.harrisonog.taperAndroid.ui.theme.TaperHabitPrimary
 import kotlinx.coroutines.launch
@@ -592,6 +593,19 @@ private fun HabitDashboard(
                             )
                         }
                     }
+
+                    HorizontalDivider()
+
+                    // Taper Progress Graph
+                    TaperProgressGraph(
+                        startPerDay = habit.startPerDay,
+                        endPerDay = habit.endPerDay,
+                        totalWeeks = totalWeeks,
+                        currentWeek = currentWeek,
+                        isGoodHabit = habit.isGoodHabit,
+                        primaryColor = habitPrimary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
                     HorizontalDivider()
 
