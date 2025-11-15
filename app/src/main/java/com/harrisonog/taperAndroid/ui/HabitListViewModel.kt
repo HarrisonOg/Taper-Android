@@ -133,8 +133,8 @@ private fun computeDashboardStatsSync(events: List<com.harrisonog.taperAndroid.d
 
 private fun calculateStreak(events: List<com.harrisonog.taperAndroid.data.db.HabitEvent>, isGoodHabit: Boolean): Int {
     // Calculate consecutive days with successful responses
-    // For good habits, "completed" is success. For taper habits, "denied" is success.
-    val successType = if (isGoodHabit) "completed" else "denied"
+    // For both good habits and taper habits, "completed" is success.
+    val successType = "completed"
 
     // Group events by date
     val eventsByDate = events.groupBy { event ->
