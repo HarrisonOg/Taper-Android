@@ -28,11 +28,22 @@ class FakeTaperRepository(
 
     override fun observeSettings(): Flow<AppSettings> = settingsFlow
 
+    override fun observeAllEvents(): Flow<List<HabitEvent>> =
+        eventsFlow.map { events -> events.values.flatten() }
+
     override suspend fun upsertSettings(
         wakeStart: LocalTime,
         wakeEnd: LocalTime,
     ) {
         settingsFlow.value = AppSettings(wakeStart, wakeEnd)
+    }
+
+    override suspend fun updateSettingsAndReschedule(
+        wakeStart: LocalTime,
+        wakeEnd: LocalTime,
+    ) {
+        settingsFlow.value = AppSettings(wakeStart, wakeEnd)
+        // In a fake repository, we don't need to actually reschedule
     }
 
     override suspend fun createHabitAndPlan(habit: Habit): Long {
@@ -48,9 +59,37 @@ class FakeTaperRepository(
             }
     }
 
+    override suspend fun updateHabitDetails(habitId: Long, name: String, description: String?, message: String) {
+        habitsFlow.value =
+            habitsFlow.value.map { existing ->
+                if (existing.id == habitId) {
+                    existing.copy(
+                        name = name,
+                        description = description,
+                        message = message
+                    )
+                } else {
+                    existing
+                }
+            }
+    }
+
     override suspend fun deleteHabit(habit: Habit) {
         habitsFlow.value = habitsFlow.value.filterNot { it.id == habit.id }
         eventsFlow.value = eventsFlow.value - habit.id
+    }
+
+    override suspend fun rescheduleAllActiveHabits() {
+        // In a fake repository, we don't need to actually reschedule
+    }
+
+    override suspend fun shouldRescheduleAll(): Boolean {
+        // For testing, return false by default
+        return false
+    }
+
+    override suspend fun rescheduleIfNeeded() {
+        // In a fake repository, we don't need to actually reschedule
     }
 
     fun setEvents(
